@@ -6,61 +6,83 @@
 
 import os
 import subprocess
-import backoff
-import openai
-#import isodate
+import isodate
+import time
 from openai import OpenAI
+
+from collections import deque 
 
 #import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 from google.oauth2 import service_account
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 client = OpenAI()
 
+yt_string = "https://www.youtube.com/watch?v="
+
 model = "gpt-3.5-turbo"
 
-@backoff.on_exception(backoff.expo, openai.RateLimitError)
+#@backoff.on_exception(backoff.expo, openai.RateLimitError)
 def completions_with_backoff():
     return client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": "You are a helpful assistant. you can only respond with id strings and cannot conversate"},
-            {"role": "user", "content": "give me the youtube ids of 5 good anime openings or endings in a comma separated list, only respond with ids"},
-            {"role": "assistant", "content": "VzqYWTgPFpA,CAuDWXsMquk,5uq34TeWEdQ,smanD_sL1w8,M-zvzz8MxFg"},
-            {"role": "user", "content": "give me 5 more youtube ids of good anime openings or endings in a comma separated list"},
+            {"role": "user", "content": "give me the youtube ids of 5 good japanese anime openings or endings in a comma separated list, only respond with ids and no other music"},
         ],
-        temperature=0,
-        max_tokens = 50
+        temperature=.4,
+        max_tokens = 100
     )
 def completions():
     return client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are a helpful assistant. you can only respond with id strings and cannot conversate"},
-            {"role": "user", "content": "give me the youtube ids of 5 good anime openings or endings in a comma separated list, only respond with ids"},
-            {"role": "assistant", "content": "VzqYWTgPFpA,CAuDWXsMquk,5uq34TeWEdQ,smanD_sL1w8,M-zvzz8MxFg"},
-            {"role": "user", "content": "give me 5 more youtube ids of good anime openings or endings in a comma separated list"},
+            {"role": "system", "content": "You are a helpful assistant. you can only respond with a comma separated list"},
+            {"role": "user", "content": "list the top 3 best anime openings"},
+            {"role": "assistant", "content": "Naruto Opening 4, Naruto Opening 6, Bleach Opening 1"},
+            {"role": "user", "content": "list 10 random great anime openings or endings"},
         ],
-        temperature=0,
-        max_tokens = 50
+        temperature=.4,
+        max_tokens = 100
     )
 
-def extract_video_url(embed_html):
-    # Extract the video URL from the embed HTML code
-    start_index = embed_html.find('src="') + len('src="')
-    end_index = embed_html.find('" fr')
-    video_url = embed_html[start_index:end_index]
-    return "https:" + video_url
+def get_videos():
+    q = deque(completions().choices[0].message.content.split(','))
+    print(q)
+    return q
 
-def get_video_ids():
-    response = completions()
+def play_vid(youtube, query):
+    request = youtube.search().list(
+        type="video",
+        maxResults=1,
+        q=query,
+        part='id'
+    )
+    response = request.execute()
+    print(response)
+    id_value = response['items'][0]['id']['videoId']
+    video_url = yt_string + id_value
 
-    print(response.choices[0].message.content)
-    return response.choices[0].message.content
+    req2 = youtube.videos().list(
+        part='contentDetails',
+        id=id_value
+    )
 
+    res2 = req2.execute()
+    print(res2)
+    duration_str = res2['items'][0]['contentDetails']['duration']
+    duration = isodate.parse_duration(duration_str).total_seconds() + 7
 
+    vlc_cmd = ['vlc', video_url]
+    vlc_sub = subprocess.Popen(vlc_cmd)
+    time.sleep(duration)
+    vlc_sub.kill()
 
 def main():
     # Disable OAuthlib's HTTPS verification when running locally.
@@ -77,22 +99,13 @@ def main():
     youtube = googleapiclient.discovery.build(
         api_service_name, api_version, credentials=credentials)
 
-    video_ids = get_video_ids()
-    """request = youtube.videos().list(
-        part="contentDetails, player",
-        ids=video_ids
-    )
-    response = request.execute()
+    queue = get_videos()
+    #play_vid(youtube, queue.pop())
 
-    embed_html = response['items'][0]['player']['embedHtml']
-    video_url = extract_video_url(embed_html)
-    #duration_str = response['items'][0]['contentDetails']['duration']
-    #duration = isodate.parse_duration(duration_str)
+    while(len(queue) > 0):
+        play_vid(youtube, queue.pop())
 
-    vlc_cmd = ['vlc', video_url]
-    #subprocess.Popen(vlc_cmd)
-    print(response)
-    """
+    
 
 if __name__ == "__main__":
     main()

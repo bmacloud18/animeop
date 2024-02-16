@@ -4,5 +4,9 @@ services:
     build: 
       context: .
     restart: unless-stopped
+    privileged: true
     env_file:
       - .env
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /dev/snd:/dev/snd
