@@ -4,3 +4,4 @@ google-auth
 isodate
 openai
 dotenv
+uvicorn==0.23.2

@@ -1,0 +1,23 @@
+services:
+  reactf:
+    build:
+      context: ./reactf
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    networks:
+      - animeop-net
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    networks:
+      - animeop-net
+
+
+networks:
+  animeop-net:
