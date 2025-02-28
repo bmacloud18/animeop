@@ -5,7 +5,7 @@ import time
 from openai import OpenAI
 import json
 
-from fastapi import FastAPI, Depends, Response
+from fastapi import FastAPI
 from typing import Annotated, Any, Optional, List, Dict
 
 from collections import deque 
@@ -51,23 +51,44 @@ def completions(prompt):
         max_tokens = 100
     )
 
-@app.get("/videos")
-def get_videos(response: Response, query: str):
+@app.get("/")
+def get_home():
     """
+        testurl
     """
-    raw_completions = deque(completions(query).choices[0].message.content.split(','))
-    q = deque([])
-    while len(raw_completions) > 0:
-        request = youtube.search().list(
-            type="video",
-            maxResults=1,
-            q=query,
-            part='id'
-        )
-        response = request.execute()
-        id_value = response['items'][0]['id']['videoId']
-        video_url = yt_string + id_value
-        q.append(video_url)
+    return ["testing"]
 
-    return q
+@app.get("/videos")
+def get_videos(query: str):
+    """
+        commented out to save tokens and continue testing
+    """
+    # raw_completions = deque(completions(query).choices[0].message.content.split(','))
+    # q = deque([])
+    # while len(raw_completions) > 0:
+    #     yt_query = raw_completions.pop()
+    #     request = youtube.search().list(
+    #         type="video",
+    #         maxResults=1,
+    #         q=yt_query,
+    #         part='id'
+    #     )
+    #     response = request.execute()
+    #     id_value = response['items'][0]['id']['videoId']
+    #     video_url = yt_string + id_value
+    #     q.append(video_url)
+    # return [*q]
+    return [
+	"https://www.youtube.com/watch?v=G8CFuZ9MseQ",
+	"https://www.youtube.com/watch?v=YkJvHe3KK2c",
+	"https://www.youtube.com/watch?v=7aMOurgDB-o",
+	"https://www.youtube.com/watch?v=atxYe-nOa9w",
+	"https://www.youtube.com/watch?v=fShlVhCfHig",
+	"https://www.youtube.com/watch?v=EL-D9LrFJd4",
+	"https://www.youtube.com/watch?v=yu0HjPzFYnY",
+	"https://www.youtube.com/watch?v=kNyR46eHDxE",
+	"https://www.youtube.com/watch?v=elyXcwunIYA",
+	"https://www.youtube.com/watch?v=8OkpRK2_gVs"
+]
+    
     

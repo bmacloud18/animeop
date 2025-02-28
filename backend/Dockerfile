@@ -1,5 +1,5 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3.9
+FROM python:3.10-slim
 SHELL ["/bin/bash", "-c"]
 WORKDIR /backend
 # Keeps Python from generating .pyc files in the container
