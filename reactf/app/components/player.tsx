@@ -4,9 +4,11 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactPlayer from 'react-player/youtube'
 import screenfull from 'screenfull'
 import { Queue } from 'queue-typescript';
+import packageInfo from '../../package.json'
 
 import api from "@/app/APIclient";
 import Duration from "@/app/components/duration";
+import ControlButton from "@/app/components/controlButton";
 
 export default function Player ({
     queue,
@@ -28,6 +30,12 @@ export default function Player ({
     const [loop, setLoop] = useState(false);
     const [seeking, setSeeking] = useState(false);
 
+    const SEPARATOR = ' · '
+
+
+
+
+
 
     const [player, setPlayer] = useState<ReactPlayer | undefined>(undefined);
 
@@ -38,6 +46,10 @@ export default function Player ({
         setPlayed(0);
         setLoaded(0);
         setPip(false);
+    }
+
+    const ref = (player: any) => {
+        setPlayer(player);
     }
 
     function handlePlayPause() {
@@ -100,12 +112,14 @@ export default function Player ({
         setPip(false);
     }
 
-    const handleSeekMousedown = (event: any) => {
+    const handleSeekMouseDown = (event: any) => {
         setSeeking(true);
     }
 
     const handleSeekChange = (event: any) => {
+        console.log(event.target.value);
         setPlayed(parseFloat(event.target.value));
+        player?.seekTo(played);
     }
 
     const handleSeekMouseUp = (event: any) => {
@@ -114,13 +128,18 @@ export default function Player ({
             player?.seekTo(parseFloat(event.target.value));
     }
 
-    function handleProgress() {
+    const handleProgress = (state: {
+        played: React.SetStateAction<number>;
+        loaded: React.SetStateAction<number>;
+      }) =>  {
         console.log('onProgress', URL, pip, playing, controls, volume, muted, played, loaded, duration, playbackRate, loop, seeking)
+        setPlayed(state.played);
+        setLoaded(state.loaded);
     }
 
     function handleEnded() {
         console.log('video end');
-        if (q.length > 0) {
+        if (q.length > 0 && !loop) {
             let next = q.dequeue();
             setURL(next);
         }
@@ -149,43 +168,114 @@ export default function Player ({
     }
 
      useEffect(() => {
+        load("https://www.youtube.com/watch?v=G8CFuZ9MseQ");
         
-        
-
     }, []);
 
     return (
-        <div className="player">
-            <ReactPlayer
-              ref={playerRef}
-              className='react-player'
-              width='100%'
-              height='100%'
-              url={URL}
-              pip={pip}
-              playing={playing}
-              controls={controls}
-              light={false}
-              loop={loop}
-              playbackRate={playbackRate}
-              volume={volume}
-              muted={muted}
-              onReady={() => console.log('onReady')}
-              onStart={() => console.log('onStart')}
-              onPlay={handlePlay}
-              onEnablePIP={handleEnablePIP}
-              onDisablePIP={handleDisablePIP}
-              onPause={handlePause}
-              onBuffer={() => console.log('onBuffer')}
-              onPlaybackRateChange={handleOnPlaybackRateChange}
-              onSeek={e => console.log('onSeek', e)}
-              onEnded={handleEnded}
-              onError={e => console.log('onError', e)}
-              onProgress={handleProgress}
-              onDuration={handleDuration}
-              onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
-            />
+        <div className="flex flex-col player-main h-screen">
+            <div className="flex flex-col player flex flex-col h-256 pointer-events-none">
+                <ReactPlayer
+                    ref={ref}
+                    className='flex flex-col react-player h-64'
+                    url={URL}
+                    pip={pip}
+                    playing={playing}
+                    controls={controls}
+                    light={false}
+                    loop={loop}
+                    playbackRate={playbackRate}
+                    volume={volume}
+                    muted={muted}
+                    onReady={() => console.log('onReady')}
+                    onStart={() => console.log('onStart')}
+                    onPlay={handlePlay}
+                    onEnablePIP={handleEnablePIP}
+                    onDisablePIP={handleDisablePIP}
+                    onPause={handlePause}
+                    onBuffer={() => console.log('onBuffer')}
+                    onPlaybackRateChange={handleOnPlaybackRateChange}
+                    onSeek={e => console.log('onSeek', e)}
+                    onEnded={handleEnded}
+                    onError={e => console.log('onError', e)}
+                    onProgress={handleProgress}
+                    onDuration={handleDuration}
+                    onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
+               />
+            </div>
+            <table className="flex flex-row gap-2">
+                <tbody className="flex flex-row gap-2">
+                    <tr className="flex flex-col">
+                        <td className="flex flex-row gap-2">
+                            <ControlButton onClick={handleStop} text="Stop"></ControlButton>
+                            <ControlButton onClick={handlePlayPause} text={playing ? 'Pause' : 'Play'}></ControlButton>
+                            <ControlButton onClick={handleClickFullscreen} text="Full"></ControlButton>
+                            {ReactPlayer.canEnablePIP(URL) &&
+                                <button onClick={handleTogglePIP}>{pip ? 'Disable PIP' : 'Enable PIP'}</button>}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Seek</th>
+                        <td>
+                            <input
+                                type='range' min={0} max={0.999999} step='any'
+                                value={played}
+                                onMouseDown={handleSeekMouseDown}
+                                onChange={handleSeekChange}
+                                onMouseUp={handleSeekMouseUp}
+                           />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Volume</th>
+                        <td>
+                            <input type='range' min={0} max={1} step='any' value={volume} onChange={handleVolumeChange}/>
+                        </td>
+                    </tr>
+                    {/* <tr>
+                        <th>
+                            <label htmlFor='controls'>Controls</label>
+                        </th>
+                        <td>
+                            <input id='controls' type='checkbox' checked={controls} onChange={handleToggleControls}/>
+                            <em>&nbsp; Requires player reload</em>
+                        </td>
+                    </tr> */}
+                    <tr>
+                        <th>
+                            <label htmlFor='muted'>Muted</label>
+                        </th>
+                        <td>
+                            <input id='muted' type='checkbox' checked={muted} onChange={handleToggleMute}/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <label htmlFor='loop'>Loop</label>
+                        </th>
+                        <td>
+                            <input id='loop' type='checkbox' checked={loop} onChange={handleToggleLoop}/>
+                        </td>
+                    </tr>
+                    {/* <tr>
+                        <th>Played</th>
+                        <td><progress max={1} value={played}/></td>
+                    </tr>
+                    <tr>
+                        <th>Loaded</th>
+                        <td><progress max={1} value={loaded}/></td>
+                    </tr> */}
+                </tbody>
+            </table>
+            <footer className='footer flex flex-row'>
+            Version <strong>{packageInfo.version}</strong>
+                {SEPARATOR}
+                <a href='https://github.com/CookPete/react-player'>GitHub</a>
+                {SEPARATOR}
+                <a href='https://www.npmjs.com/package/react-player'>npm</a>
+            </footer>
         </div>
+        
     )
 }
     
