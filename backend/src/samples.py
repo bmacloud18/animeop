@@ -1,5 +1,5 @@
-export default {
-    urls : [
+def samples():
+    return [
         [
             "https://www.youtube.com/watch?v=9jvVBVcZ0-Y",
             " Fairy Tail Opening 1"
@@ -41,4 +41,3 @@ export default {
             "Attack on Titan Opening 1"
         ]
     ]
-}

@@ -13,8 +13,9 @@ import samples from "@/app/samples/urls";
 
 export default function Homepage() {
     const [query, setQuery] = useState<string>('');
-    const [q, setQ] = useState<Queue<string>>(new Queue<string>());
+    const [q, setQ] = useState<Queue<string[]>>(new Queue<string[]>());
     const [URL, setURL] = useState<string>('');
+    const[title, setTitle] = useState<string>('');
     const [pip, setPip] = useState(false);
     const [playing, setPlaying] = useState(false);
     const [controls, setControls] = useState(false);
@@ -33,11 +34,40 @@ export default function Homepage() {
 
     const [player, setPlayer] = useState<ReactPlayer | undefined>(undefined);
 
-    function load(url: string) {
-        setURL(url);
+    function load(vid: string[]) {
+        setURL(vid[0]);
+        setTitle(vid[1]);
         setPlayed(0);
         setLoaded(0);
         setPip(false);
+    }
+
+    function retrieveVideos() {
+        Promise.all([api.getVideos("naruto")]).then((res) => {
+            console.log("retrieved urls", res);
+            const arrayQ: string[][] = res[0];
+            let freshQ = new Queue<string[]>(...arrayQ);
+            const first = freshQ.dequeue(); 
+            setQ(freshQ);
+            load(first);
+        }).catch((err) => {
+            const arrayQ: string[][] = samples.urls;
+            let freshQ = new Queue<string[]>(...arrayQ);
+            const first = freshQ.dequeue();
+            setQ(freshQ);
+            load(first);
+            console.error(err);
+        });
+    }
+
+    function nextVid() {
+        if (q.length > 0) {
+            let next = q.dequeue();
+            load(next);
+        }
+        else if (q.length < 1) {
+            retrieveVideos();
+        }
     }
 
     //important so the state of the player can be ascertained
@@ -47,29 +77,7 @@ export default function Homepage() {
         setPlayer(player);
     }
 
-    function nextVid() {
-        if (q.length > 0) {
-            let next = q.dequeue();
-            load(next);
-        }
-        else if (q.length < 1) {
-            Promise.all([api.getVideos("naruto")]).then((res) => {
-                console.log("retrieved urls", res);
-                const arrayQ: string[] = res[0];
-                let freshQ = new Queue<string>(...arrayQ);
-                const first = freshQ.dequeue(); 
-                setQ(freshQ);
-                load(first);
-            }).catch((err) => {
-                const arrayQ: string[] = samples.urls;
-                let freshQ = new Queue<string>(...arrayQ);
-                const first = freshQ.dequeue();
-                setQ(freshQ);
-                load(first);
-                console.error(err);
-            });
-        }
-    }
+
 
     const handleProgress = (state: {
             played: React.SetStateAction<number>;
@@ -154,17 +162,9 @@ export default function Homepage() {
     }
 
     useEffect(() => {
-        Promise.all([api.getVideos("naruto")]).then((res) => {
-            console.log("retrieved urls", res);
-            const arrayQ: string[] = res[0];
-            let freshQ = new Queue<string>(...arrayQ);
-            const first = freshQ.dequeue(); 
-            setQ(freshQ);
-            load(first);
-        }).catch((err) => {
-            load('https://www.youtube.com/watch?v=G8CFuZ9MseQ');
-            console.error(err);
-        });
+        if (URL === '') {
+            retrieveVideos();
+        }
     }, []);
 
     let content;
@@ -200,6 +200,11 @@ export default function Homepage() {
                             onProgress={handleProgress}
                             onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
                         />
+                    </div>
+                </div>
+                <div className="flex flex-col items-center">
+                    <div className="border border-2 border-yellow-600 rounded-lg p-2">
+                        {title}
                     </div>
                 </div>
                 <div className="flex flex-col w-screen items-center gap-2 p-4">

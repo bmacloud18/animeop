@@ -16,6 +16,8 @@ from google.oauth2 import service_account
 
 from dotenv import load_dotenv
 
+from src.samples import samples
+
 load_dotenv()
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
@@ -42,10 +44,10 @@ def completions(prompt):
     return client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are a helpful assistant. you can only respond with a comma separated list"},
-            {"role": "user", "content": "list the top 3 best anime openings"},
-            {"role": "assistant", "content": "Naruto Opening 4, Naruto Opening 6, Bleach Opening 1"},
-            {"role": "user", "content": "list 10 random great anime openings or endings"},
+            {"role": "system", "content": "You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not reuse answers unless prompted to discard history."},
+            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
+            {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
+            {"role": "user", "content": "list 10 more random anime openings or endings that I would enjoy."},
         ],
         temperature=.4,
         max_tokens = 100
@@ -63,32 +65,24 @@ def get_videos(query: str):
     """
         commented out to save tokens and continue testing
     """
-    # raw_completions = deque(completions(query).choices[0].message.content.split(','))
-    # q = deque([])
-    # while len(raw_completions) > 0:
-    #     yt_query = raw_completions.pop()
-    #     request = youtube.search().list(
-    #         type="video",
-    #         maxResults=1,
-    #         q=yt_query,
-    #         part='id'
-    #     )
-    #     response = request.execute()
-    #     id_value = response['items'][0]['id']['videoId']
-    #     video_url = yt_string + id_value
-    #     q.append(video_url)
-    # return [*q]
-    return [
-	"https://www.youtube.com/watch?v=YkJvHe3KK2c",
-	"https://www.youtube.com/watch?v=7aMOurgDB-o",
-	"https://www.youtube.com/watch?v=atxYe-nOa9w",
-	"https://www.youtube.com/watch?v=fShlVhCfHig",
-    "https://www.youtube.com/watch?v=G8CFuZ9MseQ",
-	"https://www.youtube.com/watch?v=EL-D9LrFJd4",
-	"https://www.youtube.com/watch?v=yu0HjPzFYnY",
-	"https://www.youtube.com/watch?v=kNyR46eHDxE",
-	"https://www.youtube.com/watch?v=elyXcwunIYA",
-	"https://www.youtube.com/watch?v=8OkpRK2_gVs"
-]
+    raw_completions = deque(completions(query).choices[0].message.content.split(','))
+    q = deque([[]])
+    while len(raw_completions) > 0:
+        yt_query = raw_completions.pop()
+        request = youtube.search().list(
+            type="video",
+            maxResults=1,
+            q=yt_query,
+            part='id'
+        )
+        try:
+            response = request.execute()
+        except Exception as e:
+            return samples
+        id_value = response['items'][0]['id']['videoId']
+        video_url = yt_string + id_value
+        q.append([video_url, yt_query])
+    return [*q]
+#     
     
     
