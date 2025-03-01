@@ -165,7 +165,9 @@ export default function Homepage() {
     }
 
     function handleError(e: Error) {
+        
         if (e.toString() == '150') {
+            console.log('potential licensing error')
             nextVid();
         }
     }
