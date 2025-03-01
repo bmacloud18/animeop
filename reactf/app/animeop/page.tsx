@@ -164,6 +164,12 @@ export default function Homepage() {
             screenfull.request(playerdiv);
     }
 
+    function handleError(e: Error) {
+        if (e.message == '150') {
+            nextVid();
+        }
+    }
+
     useEffect(() => {
         if (URL === '') {
             retrieveVideos();
@@ -199,7 +205,7 @@ export default function Homepage() {
                             onBuffer={() => console.log('onBuffer')}
                             onSeek={e => console.log('onSeek', e)}
                             onEnded={handleEnded}
-                            onError={e => console.log('onError', e)}
+                            onError={e => handleError(e)}
                             onProgress={handleProgress}
                             onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
                         />
