@@ -165,8 +165,7 @@ export default function Homepage() {
     }
 
     function handleError(e: Error) {
-        console.log(e, e.message);
-        if (e.message == '150') {
+        if (e.toString() == '150') {
             nextVid();
         }
     }
