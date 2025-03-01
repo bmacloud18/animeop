@@ -248,15 +248,11 @@ export default function Homepage() {
                             </tr> */}
                             <tr className="flex flex-row items-center justify-center gap-2 w-full">
                                 <td className="flex flex-col items-center w-fit">
-                                    <th>
-                                        <label htmlFor='muted'>Muted</label>
-                                    </th>
+                                    <label htmlFor='muted'>Muted</label>
                                     <input id='muted' type='checkbox' checked={muted} onChange={handleToggleMute}/>
                                 </td>
                                 <td className="flex flex-col items-center w-fit">
-                                    <th>
-                                        <label htmlFor='loop'>Loop</label>
-                                    </th>
+                                    <label htmlFor='loop'>Loop</label>
                                     <input id='loop' type='checkbox' checked={loop} onChange={handleToggleLoop}/>
                                 </td>
                             </tr>
