@@ -47,6 +47,9 @@ export default function Homepage() {
             console.log("retrieved urls", res);
             const arrayQ: string[][] = res[0];
             let freshQ = new Queue<string[]>(...arrayQ);
+            //for some reason sends empty data in 0 slot
+            //still sends 10 results as intended
+            freshQ.dequeue();
             const first = freshQ.dequeue(); 
             setQ(freshQ);
             load(first);
