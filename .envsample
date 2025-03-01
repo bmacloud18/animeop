@@ -1,0 +1,6 @@
+OPENAI_API_KEY=sk-proj-xxx-xxx-xxx-xx-xxx-xxxx-xx
+YT_API_KEY=xxx_xxxx
+
+BACKEND_PORT=?
+FRONTEND_PORT=?
+BACKEND_ADDRESS=http://api:?
