@@ -15,7 +15,9 @@ export default function Homepage() {
     const [query, setQuery] = useState<string>('');
     const [q, setQ] = useState<Queue<string[]>>(new Queue<string[]>());
     const [URL, setURL] = useState<string>('');
-    const[title, setTitle] = useState<string>('');
+    const [history, setHistory] = useState<Set<string>>(new Set<string>());
+    const [fullHistory, setFullHistory] = useState<Queue<string[]>>(new Queue<string[]>());
+    const [title, setTitle] = useState<string>('');
     const [pip, setPip] = useState(false);
     const [playing, setPlaying] = useState(false);
     const [controls, setControls] = useState(false);
@@ -43,9 +45,11 @@ export default function Homepage() {
     }
 
     function retrieveVideos() {
-        Promise.all([api.getVideos("naruto")]).then((res) => {
+        Promise.all([api.getVideos(query)]).then((res) => {
             console.log("retrieved urls", res);
-            const arrayQ: string[][] = res[0];
+            let arrayQ: string[][] = [[]];
+            if (res[0][0])
+                arrayQ = res[0];
             let freshQ = new Queue<string[]>(...arrayQ);
             //for some reason sends empty data in 0 slot
             //still sends 10 results as intended
@@ -66,7 +70,15 @@ export default function Homepage() {
     function nextVid() {
         if (q.length > 0) {
             let next = q.dequeue();
-            load(next);
+            const nurl = next[0];
+            //prevent repeats within 20 videos
+            if (history.has(nurl)) {
+                console.log('skipped dupe');
+                nextVid();
+            }
+            else {
+                load(next);
+            }
         }
         else if (q.length < 1) {
             retrieveVideos();
@@ -86,7 +98,7 @@ export default function Homepage() {
             played: React.SetStateAction<number>;
             loaded: React.SetStateAction<number>; }) =>  {
 
-            console.log('onProgress', URL, pip, playing, controls, volume, muted, played, loaded, duration, playbackRate, loop, seeking)
+            // console.log('onProgress', URL, pip, playing, controls, volume, muted, played, loaded, duration, playbackRate, loop, seeking)
             setPlayed(state.played);
             setLoaded(state.loaded);
 
@@ -139,8 +151,16 @@ export default function Homepage() {
             player?.seekTo(parseFloat(event.target.value));
     }
 
+    //handle adding ended video to history and starting next video
     function handleEnded() {
         console.log('video end no loop');
+        fullHistory.enqueue([URL, title]);
+        history.add(URL);
+        if (fullHistory.length > 20) {
+            const out = fullHistory.dequeue();
+            history.delete(out[0]);
+        }
+            
         nextVid();
     }
 
@@ -165,7 +185,6 @@ export default function Homepage() {
     }
 
     function handleError(e: Error) {
-        
         if (e.toString() == '150') {
             console.log('potential licensing error')
             nextVid();
@@ -174,8 +193,10 @@ export default function Homepage() {
 
     useEffect(() => {
         if (URL === '') {
+            setQuery('');
             retrieveVideos();
         }
+        console.log('i fire once');
     }, []);
 
     let content;

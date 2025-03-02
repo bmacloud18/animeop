@@ -7,7 +7,8 @@ const nextConfig = {
             destination: `${process.env.BACKEND_ADDRESS}/:path*`
           }
         ]
-      }
+      },
+      reactStrictMode: false
 };
 
 export default nextConfig;

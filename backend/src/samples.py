@@ -9,6 +9,10 @@ def samples():
             " Dragon Ball Z Opening"
         ],
         [
+            "https://www.youtube.com/watch?v=Oo52vQyAR6w",
+            " One Piece Opening 20"
+        ],
+        [
             "https://www.youtube.com/watch?v=YkJvHe3KK2c",
             " Demon Slayer Opening 1"
         ],

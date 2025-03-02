@@ -1,12 +1,10 @@
 import os
-import subprocess
-import isodate
-import time
+# import subprocess
+# import isodate
+# import time
 from openai import OpenAI
-import json
 
 from fastapi import FastAPI
-from typing import Annotated, Any, Optional, List, Dict
 
 from collections import deque 
 
@@ -26,7 +24,7 @@ yt_key = os.environ.get('YT_API_KEY')
 api_service_name = "youtube"
 api_version = "v3"
 
-# Get credentials and create an API client
+# Get credentials and create an API client for yt
 youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey=yt_key)
 
 scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
@@ -63,7 +61,7 @@ def get_home():
 @app.get("/videos")
 def get_videos(query: str):
     """
-        commented out to save tokens and continue testing
+        if needed return samples to save tokens and continue testing
     """
     raw_completions = deque(completions(query).choices[0].message.content.split(','))
     q = deque([[]])
@@ -78,6 +76,7 @@ def get_videos(query: str):
         try:
             response = request.execute()
         except Exception as e:
+            print('out of yt tokens')
             return samples
         id_value = response['items'][0]['id']['videoId']
         video_url = yt_string + id_value
