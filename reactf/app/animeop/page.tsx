@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import ReactPlayer from 'react-player/youtube'
 import screenfull from 'screenfull'
 
@@ -31,6 +31,7 @@ export default function Homepage() {
     const [loop, setLoop] = useState(false);
     const [seeking, setSeeking] = useState(false);
 
+    const HISTORY_NUM = 10;
 
     const SEPARATOR = ' · '
 
@@ -44,7 +45,7 @@ export default function Homepage() {
         setPip(false);
     }
 
-    function retrieveVideos() {
+    const retrieveVideos = useCallback(() => {
         Promise.all([api.getVideos(query)]).then((res) => {
             console.log("retrieved urls", res);
             let arrayQ: string[][] = [[]];
@@ -65,13 +66,13 @@ export default function Homepage() {
             load(first);
             console.error(err);
         });
-    }
+    }, [query])
 
     function nextVid() {
         if (q.length > 0) {
             let next = q.dequeue();
             const nurl = next[0];
-            //prevent repeats within 20 videos
+            //prevent repeats within HISTORY_NUM videos
             if (history.has(nurl)) {
                 console.log('skipped dupe');
                 nextVid();
@@ -156,7 +157,7 @@ export default function Homepage() {
         console.log('video end no loop');
         fullHistory.enqueue([URL, title]);
         history.add(URL);
-        if (fullHistory.length > 20) {
+        if (fullHistory.length > HISTORY_NUM) {
             const out = fullHistory.dequeue();
             history.delete(out[0]);
         }
@@ -197,7 +198,7 @@ export default function Homepage() {
             retrieveVideos();
         }
         console.log('i fire once');
-    }, []);
+    }, [URL, retrieveVideos]);
 
     let content;
     if (URL != '') {
