@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Archivo_Black } from "next/font/google";
 import "./globals.css";
 import "./animeop.css";
 
 const inter = Inter({ subsets: ["latin"] });
+const archivo = Archivo_Black({
+  subsets: ["latin"],
+  weight: "400"
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -17,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`bg-gradient-radial from-blue to-purple ${inter.className}`}>{children}</body>
+      <body className={`bg-gradient-radial from-blue to-purple`}>{children}</body>
     </html>
   );
 }

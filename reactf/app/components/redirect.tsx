@@ -11,7 +11,7 @@ export default function ControlButton({
         window.location.href = `${location}`
     }
     return (
-        <button onClick={handleRedirect} className="border-2 border-black rounded-lg p-1 h-16 w-48 md:w-96 bg-white hover:bg-green">
+        <button onClick={handleRedirect} className="border-2 border-black rounded-lg p-1 h-16 w-48 md:w-96 bg-buttonwhite hover:bg-grey">
             {/* <img src="" alt="redirectimage"/> */}
             {text}
         </button>
