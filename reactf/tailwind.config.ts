@@ -23,7 +23,18 @@ const config: Config = {
 
       'lg': '1444px',
       // => @media (min-width: 1024px) { ... }
-    }
+    },
+    colors: {
+      transparent: 'transparent',
+      current: 'currentColor',
+      'green': '#14532d',
+      'red': '#b91c1c',
+      'black': '#262626',
+      'buttonwhite': '#d4d4d8',
+      'grey': '#c4c2bb',
+      'blue': '#8ec5ff',
+      'purple': '#8200db'
+    },
   },
   plugins: [],
 };

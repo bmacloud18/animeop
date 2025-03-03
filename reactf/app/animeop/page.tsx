@@ -313,7 +313,7 @@ export default function Homepage() {
     }
 
     return (
-        <main className="flex flex-col bg-gradient-radial from-blue-300 to-purple-900 h-screen w-full">
+        <main className="flex flex-col h-screen w-full">
             {content}
         </main>
     )

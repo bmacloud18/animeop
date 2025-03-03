@@ -4,7 +4,7 @@ export default function ControlButton({
     text,
     onClick
 }: {
-    text:any,
+    text:string,
     onClick: MouseEventHandler
 }) {
     return (
