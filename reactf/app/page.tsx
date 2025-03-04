@@ -22,7 +22,7 @@ export default function Home() {
         Welcome to the Abbott Portfolio
       </div>
       <div className="flex flex-col h-fit gap-12">
-        <Redirect text="Anime OP/ED Theme Player" location="/animeop"></Redirect>
+        <Redirect text="Anime OP/ED Theme Channel" location="/animeop"></Redirect>
         <Redirect text="Shiny Hunter" location="/animeop"></Redirect>
         <Redirect text="Good Calc" location="https://goodcalc.vercel.app/"></Redirect>
         <Redirect text="RNG Lotto Wheel" location="https://lottery-nine-tau.vercel.app/"></Redirect>

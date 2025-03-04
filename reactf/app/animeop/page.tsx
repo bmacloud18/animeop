@@ -11,12 +11,11 @@ import api from "@/app/APIclient";
 import ControlButton from "@/app/components/controlButton";
 import samples from "@/app/samples/urls";
 
-import QDisplay from "@/app/components/queue";
 
 export default function Homepage() {
     const [query, setQuery] = useState<string>('');
     const [q, setQ] = useState<Queue<string[]>>(new Queue<string[]>());
-    const [qMap, setMap] = useState<Map<string, string>>(new Map<string, string>());
+    const [qMap, setMap] = useState<Map<string, string[]>>(new Map<string, string[]>());
     const [URL, setURL] = useState<string>('');
     const [history, setHistory] =  useState<Map<string, string>>(new Map<string, string>());
     const [historyQ, setHistoryQ] = useState<Queue<string[]>>(new Queue<string[]>());
@@ -34,6 +33,7 @@ export default function Homepage() {
     const [loop, setLoop] = useState(false);
     const [seeking, setSeeking] = useState(false);
     const [qShowing, setQShowing] = useState(false);
+    const [idx, setIdx] = useState<number>(0);
 
     const HISTORY_NUM = 11;
 
@@ -56,6 +56,13 @@ export default function Homepage() {
             let arrayQ: string[][] = [[]];
             if (res[0][0])
                 arrayQ = res[0];
+            let i = idx;
+            for (let item of arrayQ)
+            {
+                item[2] = i + '';
+                i++;
+            }
+            setIdx(i);
             let freshQ = new Queue<string[]>(...arrayQ);
             //for some reason sends empty data in 0 slot
             //still sends 10 results as intended
@@ -64,17 +71,26 @@ export default function Homepage() {
             setQ(freshQ);
             for (let item of freshQ.toArray())
             {
-                qMap.set(item[1], item[0]);
+                if (!qMap.has(item[1]))
+                    qMap.set(item[2], [item[0], item[1]]);
             }
             load(first);
         }).catch((err) => {
             const arrayQ: string[][] = samples.urls;
+            let i = idx;
+            for (let item of arrayQ)
+            {
+                item[2] = i + '';
+                i++;
+            }
+            setIdx(i);
             let freshQ = new Queue<string[]>(...arrayQ);
             const first = freshQ.dequeue();
             setQ(freshQ);
             for (let item of freshQ.toArray())
             {
-                qMap.set(item[1], item[0]);
+                if (!qMap.has(item[1]))
+                    qMap.set(item[2], [item[0], item[1]]);
             }
             load(first);
             console.error(err);
@@ -206,15 +222,16 @@ export default function Homepage() {
         }
     }
 
-    function removeItem(title: string) {
-        console.log('delete clicked');
-        let durl = qMap.get(title);
-        
-        if (durl) {
+    function removeItem(id: string) {
+        console.log('delete clicked', id);
+        let uat = qMap.get(id);
+        if (uat) {
+            let durl = uat[0]
+            let title = uat[1];
             qMap.delete(title);
-            setQ(new Queue<string[]>(...q.toArray().filter(item => (item[0] !== durl && item[1] !== title))));
+            setQ(new Queue<string[]>(...q.toArray().filter(item => (item[2] !== id))));
+            console.log(durl, title, qMap, q);
         }
-        console.log(durl, title, qMap, q);
     }
 
     function showQ() {
@@ -256,34 +273,36 @@ export default function Homepage() {
                     <div className="p-2 underline text-4xl place-self-center">
                         Anime OP/ED Channel
                     </div>
-                    <div className="flex flex-col aspect-video player-wrapper pointer-events-none border-4 rounded-md border-yellow">
-                        <ReactPlayer
-                            ref={ref}
-                            className='flex flex-col react-player aspect-video'
-                            height='100%'
-                            width='100%'
-                            url={URL}
-                            pip={pip}
-                            playing={playing}
-                            controls={controls}
-                            light={false}
-                            loop={loop}
-                            playbackRate={playbackRate}
-                            volume={volume}
-                            muted={muted}
-                            onReady={() => console.log('onReady')}
-                            onStart={() => console.log('onStart')}
-                            onPlay={handlePlay}
-                            onEnablePIP={handleEnablePIP}
-                            onDisablePIP={handleDisablePIP}
-                            onPause={handlePause}
-                            onBuffer={() => console.log('onBuffer')}
-                            onSeek={e => console.log('onSeek', e)}
-                            onEnded={handleEnded}
-                            onError={e => handleError(e)}
-                            onProgress={handleProgress}
-                            onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
-                        />
+                    <div className="border-yellow border-4 rounded-xl player-wrapper">
+                        <div className="flex flex-col aspect-video pointer-events-none border-2 w-full bg-black rounded-sm border-black">
+                            <ReactPlayer
+                                ref={ref}
+                                className='flex flex-col react-player aspect-video'
+                                height='100%'
+                                width='100%'
+                                url={URL}
+                                pip={pip}
+                                playing={playing}
+                                controls={controls}
+                                light={false}
+                                loop={loop}
+                                playbackRate={playbackRate}
+                                volume={volume}
+                                muted={muted}
+                                onReady={() => console.log('onReady')}
+                                onStart={() => console.log('onStart')}
+                                onPlay={handlePlay}
+                                onEnablePIP={handleEnablePIP}
+                                onDisablePIP={handleDisablePIP}
+                                onPause={handlePause}
+                                onBuffer={() => console.log('onBuffer')}
+                                onSeek={e => console.log('onSeek', e)}
+                                onEnded={handleEnded}
+                                onError={e => handleError(e)}
+                                onProgress={handleProgress}
+                                onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
+                            />
+                        </div>
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
@@ -341,7 +360,9 @@ export default function Homepage() {
                                 </td>
                             </tr>
                             <tr>
-                                <ControlButton text="Q" onClick={showQ}></ControlButton>
+                                <td>
+                                    <ControlButton text="Q" onClick={showQ}></ControlButton>
+                                </td>
                             </tr>
                             {/* <tr>
                                 <th>Played</th>
@@ -370,11 +391,11 @@ export default function Homepage() {
         <div id="q-display" className="flex flex-col hidden bg-grey justify-between items-center w-[96rem] h-screen border transition-transform duration-500 ease-out">
             <ul className="flex flex-col w-fit min-w-max max-w-[50%] max-h-[75%] overflow-y-scroll border-b">
                 {q.toArray().map(item => (
-                    <li className="flex flex-row w-full border-b justify-between p-2 w-full gap-2 place-items-center" key={item[1]}>
+                    <li className="flex flex-row w-full border-b justify-between p-2 w-full gap-2 place-items-center" key={item[2]}>
                         <div className="flex items-center w-full h-12">
                             {item[1]}
                         </div>
-                        <ControlButton text="D" onClick={() => removeItem(item[1])}></ControlButton>
+                        <ControlButton text="D" onClick={() => removeItem(item[2])}></ControlButton>
                     </li>
                 ))}
             </ul>
