@@ -33,7 +33,8 @@ const config: Config = {
       'buttonwhite': '#d4d4d8',
       'grey': '#c4c2bb',
       'blue': '#8ec5ff',
-      'purple': '#8200db'
+      'purple': '#8200db',
+      'yellow': '#a65f00'
     },
   },
   plugins: [],

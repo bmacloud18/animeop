@@ -218,14 +218,21 @@ export default function Homepage() {
     }
 
     function showQ() {
+        let boo = !qShowing
+        setQShowing(!qShowing);
+        console.log(boo);
+        
         const qDisplay = document.getElementById("q-display");
-        if (!qShowing && qDisplay) {
+        if (boo && qDisplay) {
             qDisplay.style.transform = "translateX(-100%)"
+            console.log(qShowing);
         }
         else if (qDisplay) {
-            qDisplay.style.transform = "translateX(0)"
+            qDisplay.style.transform = "translateX(100%)"
         }
-        setQShowing(!qShowing);
+        
+        
+        
     }
 
     useEffect(() => {
@@ -242,7 +249,10 @@ export default function Homepage() {
             <div className="flex flex-col justify-around w-fit h-full self-center">
             
                 <div className="flex flex-col w-3/4 md:w-4/7 lg:w-3/5 aspect-video place-content-center self-center">
-                    <div className="flex flex-col aspect-video player-wrapper pointer-events-none border-4 rounded-md border-yellow-600">
+                    <div className="p-2 underline text-4xl place-self-center">
+                        Anime OP/ED Channel
+                    </div>
+                    <div className="flex flex-col aspect-video player-wrapper pointer-events-none border-4 rounded-md border-yellow">
                         <ReactPlayer
                             ref={ref}
                             className='flex flex-col react-player aspect-video'
@@ -273,7 +283,7 @@ export default function Homepage() {
                     </div>
                 </div>
                 <div className="flex flex-col items-center">
-                    <div className="border border-2 border-yellow-600 rounded-lg p-2">
+                    <div className="border border-2 border rounded-lg p-2">
                         {title}
                     </div>
                 </div>
@@ -352,23 +362,31 @@ export default function Homepage() {
         )
     }
 
+    let qDisplayBox = qShowing ? (
+        <div id="q-display" className="bg-grey justify-center items-center w-[96rem] border transition-transform duration-500 ease-out">
+            <ul className="flex flex-col w-fit min-w-max">
+                {q.toArray().map(item => (
+                    <li className="flex flex-row w-full border-b justify-between p-2 w-full gap-2 place-items-center" key={item[1]}>
+                        <div className="flex items-center w-full h-12">
+                            {item[1]}
+                        </div>
+                        <ControlButton text="D" onClick={() => removeItem(item[1])}></ControlButton>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    ) : (
+        <div id="q-display">
+
+        </div>
+    )
+
     return (
         <div className="flex flex-start content-center">
             <main className="flex flex-col h-screen w-full">
                 {content}
             </main>
-            <div id="q-display" className="bg-grey justify-center items-center w-[96rem] border transition-transform duration-500 ease-out">
-                <ul className="flex flex-col w-fit min-w-max">
-                    {q.toArray().map(item => (
-                        <li className="flex flex-row w-full border-b justify-between p-2 w-full gap-2 place-items-center" key={item[1]}>
-                            <div className="flex items-center w-full h-12">
-                                {item[1]}
-                            </div>
-                            <ControlButton text="D" onClick={() => removeItem(item[1])}></ControlButton>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            {qDisplayBox}
         </div>
 
     )
