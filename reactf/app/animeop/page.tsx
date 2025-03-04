@@ -224,14 +224,18 @@ export default function Homepage() {
         
         const qDisplay = document.getElementById("q-display");
         if (boo && qDisplay) {
-            qDisplay.style.transform = "translateX(-100%)"
+            qDisplay.classList.remove('hidden');
+            setTimeout(() => {
+                qDisplay.style.transform = "translateX(-100%)";
+            }, 100)
             console.log(qShowing);
         }
         else if (qDisplay) {
-            qDisplay.style.transform = "translateX(100%)"
+            qDisplay.style.transform = "translateX(0)"
+            setTimeout(() => {
+                qDisplay.classList.add('hidden'); // Hide element after translation
+            }, 500);
         }
-        
-        
         
     }
 
@@ -362,9 +366,9 @@ export default function Homepage() {
         )
     }
 
-    let qDisplayBox = qShowing ? (
-        <div id="q-display" className="bg-grey justify-center items-center w-[96rem] border transition-transform duration-500 ease-out">
-            <ul className="flex flex-col w-fit min-w-max">
+    let qDisplayBox = (
+        <div id="q-display" className="flex flex-col hidden bg-grey justify-between items-center w-[96rem] h-screen border transition-transform duration-500 ease-out">
+            <ul className="flex flex-col w-fit min-w-max max-w-[50%] max-h-[75%] overflow-y-scroll border-b">
                 {q.toArray().map(item => (
                     <li className="flex flex-row w-full border-b justify-between p-2 w-full gap-2 place-items-center" key={item[1]}>
                         <div className="flex items-center w-full h-12">
@@ -374,15 +378,14 @@ export default function Homepage() {
                     </li>
                 ))}
             </ul>
-        </div>
-    ) : (
-        <div id="q-display">
-
+            <div className="self-end m-4">
+                <ControlButton text="Close" onClick={showQ}></ControlButton>
+            </div>
         </div>
     )
 
     return (
-        <div className="flex flex-start content-center">
+        <div className="flex flex-start content-center overflow-hidden">
             <main className="flex flex-col h-screen w-full">
                 {content}
             </main>
