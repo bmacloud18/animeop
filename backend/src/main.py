@@ -77,7 +77,7 @@ def get_videos(query: str):
             response = request.execute()
         except Exception as e:
             print('out of yt tokens')
-            return samples
+            return [*q] + samples
         id_value = response['items'][0]['id']['videoId']
         video_url = yt_string + id_value
         q.append([video_url, yt_query])

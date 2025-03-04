@@ -11,12 +11,15 @@ import api from "@/app/APIclient";
 import ControlButton from "@/app/components/controlButton";
 import samples from "@/app/samples/urls";
 
+import QDisplay from "@/app/components/queue";
+
 export default function Homepage() {
     const [query, setQuery] = useState<string>('');
     const [q, setQ] = useState<Queue<string[]>>(new Queue<string[]>());
+    const [qMap, setMap] = useState<Map<string, string>>(new Map<string, string>());
     const [URL, setURL] = useState<string>('');
-    const [history, setHistory] = useState<Set<string>>(new Set<string>());
-    const [fullHistory, setFullHistory] = useState<Queue<string[]>>(new Queue<string[]>());
+    const [history, setHistory] =  useState<Map<string, string>>(new Map<string, string>());
+    const [historyQ, setHistoryQ] = useState<Queue<string[]>>(new Queue<string[]>());
     const [title, setTitle] = useState<string>('');
     const [pip, setPip] = useState(false);
     const [playing, setPlaying] = useState(false);
@@ -30,8 +33,9 @@ export default function Homepage() {
     const [playbackRate, setPlaybackRate] = useState(1.0);
     const [loop, setLoop] = useState(false);
     const [seeking, setSeeking] = useState(false);
+    const [qShowing, setQShowing] = useState(false);
 
-    const HISTORY_NUM = 10;
+    const HISTORY_NUM = 11;
 
     const SEPARATOR = ' · '
 
@@ -43,6 +47,7 @@ export default function Homepage() {
         setPlayed(0);
         setLoaded(0);
         setPip(false);
+        setPlaying(true);
     }
 
     const retrieveVideos = useCallback(() => {
@@ -57,12 +62,20 @@ export default function Homepage() {
             freshQ.dequeue();
             const first = freshQ.dequeue(); 
             setQ(freshQ);
+            for (let item of freshQ.toArray())
+            {
+                qMap.set(item[1], item[0]);
+            }
             load(first);
         }).catch((err) => {
             const arrayQ: string[][] = samples.urls;
             let freshQ = new Queue<string[]>(...arrayQ);
             const first = freshQ.dequeue();
             setQ(freshQ);
+            for (let item of freshQ.toArray())
+            {
+                qMap.set(item[1], item[0]);
+            }
             load(first);
             console.error(err);
         });
@@ -81,7 +94,7 @@ export default function Homepage() {
                 load(next);
             }
         }
-        else if (q.length < 1) {
+        else {
             retrieveVideos();
         }
     }
@@ -155,11 +168,12 @@ export default function Homepage() {
     //handle adding ended video to history and starting next video
     function handleEnded() {
         console.log('video end no loop');
-        fullHistory.enqueue([URL, title]);
-        history.add(URL);
-        if (fullHistory.length > HISTORY_NUM) {
-            const out = fullHistory.dequeue();
-            history.delete(out[0]);
+        historyQ.enqueue([URL, title]);
+        history.set(title, URL);
+        if (historyQ.length > HISTORY_NUM) {
+            const out = historyQ.dequeue();
+            if (history.has(out[1]))
+                history.delete(out[1]);
         }
             
         nextVid();
@@ -192,6 +206,28 @@ export default function Homepage() {
         }
     }
 
+    function removeItem(title: string) {
+        console.log('delete clicked');
+        let durl = qMap.get(title);
+        
+        if (durl) {
+            qMap.delete(title);
+            setQ(new Queue<string[]>(...q.toArray().filter(item => (item[0] !== durl && item[1] !== title))));
+        }
+        console.log(durl, title, qMap, q);
+    }
+
+    function showQ() {
+        const qDisplay = document.getElementById("q-display");
+        if (!qShowing && qDisplay) {
+            qDisplay.style.transform = "translateX(-100%)"
+        }
+        else if (qDisplay) {
+            qDisplay.style.transform = "translateX(0)"
+        }
+        setQShowing(!qShowing);
+    }
+
     useEffect(() => {
         if (URL === '') {
             setQuery('');
@@ -204,6 +240,7 @@ export default function Homepage() {
     if (URL != '') {
         content = (
             <div className="flex flex-col justify-around w-fit h-full self-center">
+            
                 <div className="flex flex-col w-3/4 md:w-4/7 lg:w-3/5 aspect-video place-content-center self-center">
                     <div className="flex flex-col aspect-video player-wrapper pointer-events-none border-4 rounded-md border-yellow-600">
                         <ReactPlayer
@@ -289,6 +326,9 @@ export default function Homepage() {
                                     <input id='loop' type='checkbox' checked={loop} onChange={handleToggleLoop}/>
                                 </td>
                             </tr>
+                            <tr>
+                                <ControlButton text="Q" onClick={showQ}></ControlButton>
+                            </tr>
                             {/* <tr>
                                 <th>Played</th>
                                 <td><progress max={1} value={played}/></td>
@@ -303,7 +343,7 @@ export default function Homepage() {
                         Version 
                         <strong>{packageInfo.version}</strong>
                         {SEPARATOR}
-                        <a href='https://github.com/CookPete/react-player'>GitHub</a>
+                        <a href='https://github.com/bmacloud18/animeop'>GitHub</a>
                         {SEPARATOR}
                         <a href='https://www.npmjs.com/package/react-player'>npm</a>
                     </footer>
@@ -313,8 +353,23 @@ export default function Homepage() {
     }
 
     return (
-        <main className="flex flex-col h-screen w-full">
-            {content}
-        </main>
+        <div className="flex flex-start content-center">
+            <main className="flex flex-col h-screen w-full">
+                {content}
+            </main>
+            <div id="q-display" className="bg-grey justify-center items-center w-[96rem] border transition-transform duration-500 ease-out">
+                <ul className="flex flex-col w-fit min-w-max">
+                    {q.toArray().map(item => (
+                        <li className="flex flex-row w-full border-b justify-between p-2 w-full gap-2 place-items-center" key={item[1]}>
+                            <div className="flex items-center w-full h-12">
+                                {item[1]}
+                            </div>
+                            <ControlButton text="D" onClick={() => removeItem(item[1])}></ControlButton>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+
     )
 }

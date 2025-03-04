@@ -27,6 +27,9 @@ export default function Home() {
         <Redirect text="Good Calc" location="https://goodcalc.vercel.app/"></Redirect>
         <Redirect text="RNG Lotto Wheel" location="https://lottery-nine-tau.vercel.app/"></Redirect>
       </div>
+      <div>
+        <Redirect text="GitHub" location="https://github.com/bmacloud18/animeop"></Redirect>
+      </div>
     </div>
   );
 };
