@@ -273,7 +273,7 @@ export default function Homepage() {
                     <div className="p-2 underline text-4xl place-self-center">
                         Anime OP/ED Channel
                     </div>
-                    <div className="border-yellow border-4 rounded-xl player-wrapper">
+                    <div className="border-yellow border-8 rounded-lg player-wrapper">
                         <div className="flex flex-col aspect-video pointer-events-none border-2 w-full bg-black rounded-sm border-black">
                             <ReactPlayer
                                 ref={ref}
