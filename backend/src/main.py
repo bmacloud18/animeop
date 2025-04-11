@@ -69,9 +69,12 @@ def get_videos(query: str, history: str):
     q = deque([[]])
     while len(raw_completions) > 0:
         yt_query = raw_completions.pop()
+        ret_url = ''
+        print('query: ' + yt_query)
         with connection.cursor() as db:
             db.execute('SELECT * FROM videos WHERE vid_title=?', [yt_query])
-            ret_url = db.fetchall()['vid_url']
+            ret_url = db.fetchall()[0]['vid_url']
+            print('url: ' + ret_url)
         if len(ret_url) < 2:
             request = youtube.search().list(
                 type="video",
