@@ -1,6 +1,8 @@
-OPENAI_API_KEY=sk-proj-xxx-xxx-xxx-xx-xxx-xxxx-xx
-YT_API_KEY=xxx_xxxx
+OPENAI_API_KEY=xxxxxxxxx
+YT_API_KEY=xxxxxxxxxxx
 
-BACKEND_PORT=?
-FRONTEND_PORT=?
-BACKEND_ADDRESS=http://api:?
+DB_URL=postgresql://animeopuser:animeoppass@animeopdb.xxxxxx.ur-east-1.rds.amazonaws.com:5432/animeopdb
+
+BACKEND_PORT=xxxx
+FRONTEND_PORT=xxxx
+BACKEND_ADDRESS=http://api:xxxx

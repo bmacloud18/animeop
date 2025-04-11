@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 
 from src.samples import samples
 
+from db import connection
+
 load_dotenv()
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
@@ -67,19 +69,29 @@ def get_videos(query: str, history: str):
     q = deque([[]])
     while len(raw_completions) > 0:
         yt_query = raw_completions.pop()
-        request = youtube.search().list(
-            type="video",
-            maxResults=1,
-            q=yt_query,
-            part='id'
-        )
-        try:
-            response = request.execute()
-        except Exception as e:
-            print('out of yt tokens')
-            return [*q] + samples
-        id_value = response['items'][0]['id']['videoId']
-        video_url = yt_string + id_value
+        with connection.cursor() as db:
+            db.execute('SELECT * FROM videos WHERE vid_title=?', [yt_query])
+            ret_url = db.fetchall()['vid_url']
+        if len(ret_url) < 2:
+            request = youtube.search().list(
+                type="video",
+                maxResults=1,
+                q=yt_query,
+                part='id'
+            )
+            try:
+                response = request.execute()
+            except Exception as e:
+                print('out of yt tokens')
+                return samples
+            id_value = response['items'][0]['id']['videoId']
+            video_url = yt_string + id_value
+            with connection.cursor() as db:
+                db.execute('INSERT INTO videos (vid_title, vid_url) VALUES (%s, %s)', [yt_query, video_url])
+                connection.commit()
+        else:
+            print('retrieved a cached url')
+            video_url = ret_url
         q.append([video_url, yt_query])
     return [*q]
 #     
