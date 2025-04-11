@@ -51,7 +51,7 @@ export default function Homepage() {
     }
 
     const retrieveVideos = useCallback(() => {
-        Promise.all([api.getVideos(query, history.values())]).then((res) => {
+        Promise.all([api.getVideos(query, Array.from(history.values()))]).then((res) => {
             console.log("retrieved urls", res);
             let arrayQ: string[][] = [[]];
             if (res[0][0])
