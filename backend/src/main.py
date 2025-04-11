@@ -9,8 +9,8 @@ from fastapi import FastAPI
 from collections import deque 
 
 import googleapiclient.discovery
-import googleapiclient.errors
-from google.oauth2 import service_account
+# import googleapiclient.errors
+# from google.oauth2 import service_account
 
 from dotenv import load_dotenv
 
@@ -36,18 +36,18 @@ model = "gpt-3.5-turbo"
 
 app = FastAPI()
 
-def completions(prompt):
+def completions(prompt, history):
     if prompt == '':
         prompt = "list 10 random great anime openings or endings"
     return client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not reuse answers unless prompted to discard history."},
+            {"role": "system", "content": "You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - ${history}"},
             {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
             {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
             {"role": "user", "content": "list 10 more random anime openings or endings that I would enjoy."},
         ],
-        temperature=.4,
+        temperature=.8,
         max_tokens = 100
     )
 
@@ -59,11 +59,11 @@ def get_home():
     return ["testing"]
 
 @app.get("/videos")
-def get_videos(query: str):
+def get_videos(query: str, history: str):
     """
-        if needed return samples to save tokens and continue testing
+        if needed return samples to save tokens and continue testing (line 81)
     """
-    raw_completions = deque(completions(query).choices[0].message.content.split(','))
+    raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
     q = deque([[]])
     while len(raw_completions) > 0:
         yt_query = raw_completions.pop()
