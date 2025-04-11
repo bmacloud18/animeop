@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 
 from src.samples import samples
 
-from db import connection
+from src.db import connection
 
 load_dotenv()
 
