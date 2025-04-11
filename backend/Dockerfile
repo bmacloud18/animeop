@@ -1,6 +1,11 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
 FROM python:3.10-slim
 SHELL ["/bin/bash", "-c"]
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /backend
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
