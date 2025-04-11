@@ -61,6 +61,8 @@ async def startup_event():
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(handler)
 
+    logger.debug("startup complete")
+
 @app.get("/")
 def get_home():
     """
