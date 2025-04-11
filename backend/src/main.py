@@ -36,7 +36,8 @@ model = "gpt-3.5-turbo"
 
 app = FastAPI()
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("uvicorn")
+logger.setLevel(logging.DEBUG)
 
 def completions(prompt, history):
     if prompt == '':
@@ -70,11 +71,11 @@ def get_videos(query: str, history: str):
     while len(raw_completions) > 0:
         yt_query = raw_completions.pop()
         ret_url = ''
-        logging.debug('query: ' + yt_query)
+        logger.debug('query: ' + yt_query)
         with connection.cursor() as db:
             db.execute('SELECT * FROM videos WHERE vid_title=?', [yt_query])
             ret_url = db.fetchall()[0]['vid_url']
-            logging.debug('url: ' + ret_url)
+            logger.debug('url: ' + ret_url)
         if len(ret_url) < 2:
             request = youtube.search().list(
                 type="video",
@@ -85,7 +86,7 @@ def get_videos(query: str, history: str):
             try:
                 response = request.execute()
             except Exception as e:
-                logging.debug('out of yt tokens')
+                logger.debug('out of yt tokens')
                 return samples
             id_value = response['items'][0]['id']['videoId']
             video_url = yt_string + id_value
@@ -93,7 +94,7 @@ def get_videos(query: str, history: str):
                 db.execute('INSERT INTO videos (vid_title, vid_url) VALUES (%s, %s)', [yt_query, video_url])
                 connection.commit()
         else:
-            logging.debug('retrieved a cached url')
+            logger.debug('retrieved a cached url')
             video_url = ret_url
         q.append([video_url, yt_query])
     return [*q]
