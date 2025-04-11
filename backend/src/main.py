@@ -56,7 +56,7 @@ def completions(prompt, history):
 
 @app.on_event("startup")
 async def startup_event():
-    logger = logging.getLogger("uvicorn.access")
+    logger = logging.getLogger("animeop")
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(handler)
