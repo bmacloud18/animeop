@@ -20,4 +20,4 @@ COPY ./src ./src
 
 # Default container run.
 EXPOSE 8080
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "debug"]

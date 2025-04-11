@@ -16,6 +16,8 @@ from src.samples import samples
 
 from src.db import connection
 
+
+
 load_dotenv()
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
@@ -35,9 +37,7 @@ yt_string = "https://www.youtube.com/watch?v="
 model = "gpt-3.5-turbo"
 
 app = FastAPI()
-
-logger = logging.getLogger("uvicorn")
-logger.setLevel(logging.DEBUG)
+logger = None
 
 def completions(prompt, history):
     if prompt == '':
@@ -53,6 +53,13 @@ def completions(prompt, history):
         temperature=.8,
         max_tokens = 100
     )
+
+@app.on_event("startup")
+async def startup_event():
+    logger = logging.getLogger("uvicorn.access")
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+    logger.addHandler(handler)
 
 @app.get("/")
 def get_home():
