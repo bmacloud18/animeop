@@ -10,10 +10,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Install pip requirements
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir numpy
-RUN pip install --no-cache-dir --upgrade -r /backend/requirements.txt
-
+RUN pip install --no-cache-dir -r requirements.txt
 COPY ./src ./src
 
 # Default container run.
