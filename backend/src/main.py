@@ -82,7 +82,7 @@ def get_videos(query: str, history: str):
         ret_url = ''
         logger.debug('query: ' + yt_query)
         with connection.cursor() as db:
-            db.execute('SELECT * FROM videos WHERE vid_title=?', [yt_query])
+            db.execute('SELECT * FROM videos WHERE vid_title=%s', [yt_query])
             ret_url = db.fetchall()[0]['vid_url']
             logger.debug('url: ' + ret_url)
         if len(ret_url) < 2:
