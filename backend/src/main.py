@@ -37,7 +37,11 @@ yt_string = "https://www.youtube.com/watch?v="
 model = "gpt-3.5-turbo"
 
 app = FastAPI()
-logger = None
+
+logger = logging.getLogger("animeop")
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+logger.addHandler(handler)
 
 def completions(prompt, history):
     if prompt == '':
@@ -56,10 +60,6 @@ def completions(prompt, history):
 
 @app.on_event("startup")
 async def startup_event():
-    logger = logging.getLogger("animeop")
-    handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-    logger.addHandler(handler)
 
     logger.debug("startup complete")
 
