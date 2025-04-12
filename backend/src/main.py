@@ -11,14 +11,13 @@ import googleapiclient.discovery
 # from google.oauth2 import service_account
 
 from dotenv import load_dotenv
+load_dotenv()
+
+import psycopg
+from psycopg.rows import dict_row
+connection = psycopg.connect(os.environ.get("DB_URL"), row_factory=dict_row)
 
 from src.samples import samples
-
-from src.db import connection
-
-
-
-load_dotenv()
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
@@ -82,9 +81,12 @@ def get_videos(query: str, history: str):
         ret_url = ''
         logger.debug('query: ' + yt_query)
         with connection.cursor() as db:
-            db.execute('SELECT * FROM videos WHERE vid_title=%s', [yt_query])
-            ret_url = db.fetchall()[0]['vid_url']
-            logger.debug('url: ' + ret_url)
+            try:
+                db.execute('SELECT * FROM videos WHERE vid_title=%s', [yt_query])
+                ret_url = db.fetchall()[0]['vid_url']
+                logger.debug('url: ' + ret_url)
+            except Exception as e:
+                logger.error(f"query failed: {str(e)}")
         if len(ret_url) < 2:
             request = youtube.search().list(
                 type="video",
