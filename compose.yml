@@ -27,6 +27,7 @@ services:
         - ./reactf/build:/usr/share/nginx/html  # Point NGINX to the React build directory
         - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
         - ./nginx/ssl:/etc/nginx/certs:ro
+        - ./nginx/logs:/var/log/nginx
 
     depends_on:
       - reactf
