@@ -23,7 +23,8 @@ connection = psycopg.connect(
     user=os.environ.get('DB_USER'),
     password=os.environ.get('DB_PASS'),
     port=os.environ.get('DB_PORT'),
-    row_factory=dict_row
+    row_factory=dict_row,
+    options="-c search_path=public"
 )
 
 from src.samples import samples
