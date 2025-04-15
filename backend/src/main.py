@@ -69,6 +69,18 @@ def get_home():
     """
     return ["testing"]
 
+@app.get("/db")
+def db_test():
+    """
+        db being weird, testing endpoing
+    """
+    with connection.cursor() as db:
+        try:
+            db.execute('SELECT * FROM videos')
+            return db.fetchall()
+        except Exception as e:
+            logger.debug('error accessing db')
+
 @app.get("/videos")
 def get_videos(query: str, history: str):
     """

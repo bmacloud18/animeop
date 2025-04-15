@@ -15,4 +15,4 @@ INSERT INTO videos (vid_title, vid_url) VALUES
     ('Death Note Opening 1', 'https://www.youtube.com/watch?v=kNyR46eHDxE'),
     ('My Hero Academia Opening 1', 'https://www.youtube.com/watch?v=yu0HjPzFYnY'),
     ('Fullmetal Alchemist: Brotherhood Opening 1', 'https://www.youtube.com/watch?v=elyXcwunIYA'),
-    ('Attack on Titan Opening 5', 'https://www.youtube.com/watch?v=8OkpRK2_gVs');
+    ('Attack on Titan Opening 1', 'https://www.youtube.com/watch?v=8OkpRK2_gVs');
