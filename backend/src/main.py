@@ -106,6 +106,7 @@ def db_test():
                     ('Fullmetal Alchemist: Brotherhood Opening 1', 'https://www.youtube.com/watch?v=elyXcwunIYA'),
                     ('Attack on Titan Opening 1', 'https://www.youtube.com/watch?v=8OkpRK2_gVs');
             """)
+            connection.commit()
             db.execute("SET search_path TO public")
             db.execute('SELECT * FROM videos')
             return (['db test:', DB_URL] + db.fetchall())
