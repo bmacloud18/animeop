@@ -86,6 +86,13 @@ def db_test():
     """
     with connection.cursor() as db:
         try:
+            db.execute("""
+                CREATE TABLE IF NOT EXISTS videos (
+                    id SERIAL PRIMARY KEY,
+                    vid_title TEXT NOT NULL,
+                    vid_url TEXT NOT NULL
+                );
+            """)
             db.execute("SET search_path TO public")
             db.execute('SELECT * FROM videos')
             return (['db test:', DB_URL] + db.fetchall())
