@@ -81,6 +81,7 @@ def db_test():
             return (['db test:', DB_URL] + db.fetchall())
         except Exception as e:
             logger.debug('error accessing db')
+            return 'error occurred: ' + {str(e)}
 
 @app.get("/videos")
 def get_videos(query: str, history: str):
