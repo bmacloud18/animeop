@@ -15,7 +15,8 @@ load_dotenv()
 
 import psycopg
 from psycopg.rows import dict_row
-connection = psycopg.connect(os.environ.get("DB_URL"), row_factory=dict_row)
+DB_URL = os.environ.get('DB_URL')
+connection = psycopg.connect(DB_URL, row_factory=dict_row)
 
 from src.samples import samples
 
@@ -77,7 +78,7 @@ def db_test():
     with connection.cursor() as db:
         try:
             db.execute('SELECT * FROM videos')
-            return db.fetchall()
+            return (['db test:', DB_URL] + db.fetchall())
         except Exception as e:
             logger.debug('error accessing db')
 
