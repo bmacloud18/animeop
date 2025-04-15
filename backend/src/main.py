@@ -86,6 +86,7 @@ def db_test():
     """
     with connection.cursor() as db:
         try:
+            db.execute("SET search_path TO public")
             db.execute('SELECT * FROM videos')
             return (['db test:', DB_URL] + db.fetchall())
         except Exception as e:
