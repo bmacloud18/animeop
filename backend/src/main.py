@@ -69,7 +69,6 @@ def completions(prompt, history):
 
 @app.on_event("startup")
 async def startup_event():
-
     logger.debug("startup complete")
 
 @app.get("/")
@@ -82,9 +81,10 @@ def get_home():
 @app.get("/db")
 def db_test():
     """
-        db being weird, testing endpoing
+        reset db
     """
     with connection.cursor() as db:
+        db.execute("SET search_path TO public")
         try:
             db.execute("""
                 CREATE TABLE IF NOT EXISTS videos (
@@ -92,6 +92,9 @@ def db_test():
                     vid_title TEXT NOT NULL,
                     vid_url TEXT NOT NULL
                 );
+            """)
+            db.execute("""
+                DELETE FROM videos;
             """)
             db.execute("""
                 INSERT INTO videos (vid_title, vid_url) VALUES 
@@ -107,7 +110,6 @@ def db_test():
                     ('Attack on Titan Opening 1', 'https://www.youtube.com/watch?v=8OkpRK2_gVs');
             """)
             connection.commit()
-            db.execute("SET search_path TO public")
             db.execute('SELECT * FROM videos')
             return (['db test:', DB_URL] + db.fetchall())
         except Exception as e:
@@ -122,16 +124,19 @@ def get_videos(query: str, history: str):
     raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
     q = deque([[]])
     while len(raw_completions) > 0:
-        yt_query = raw_completions.pop()
+        yt_query = raw_completions.pop().strip()
         ret_url = ''
         logger.debug('query: ' + yt_query)
         with connection.cursor() as db:
+            db.execute("SET search_path TO public")
             try:
                 db.execute('SELECT * FROM videos WHERE vid_title=%s', [yt_query])
-                ret_url = db.fetchall()[0]['vid_url']
+                ret_obj = db.fetchall()
+                if (ret_obj):
+                    ret_url = ret_obj[0]['vid_url']
                 logger.debug('url: ' + ret_url)
             except Exception as e:
-                logger.error(f"query failed: {str(e)}")
+                logger.debug(f"video not found")
         if len(ret_url) < 2:
             request = youtube.search().list(
                 type="video",
