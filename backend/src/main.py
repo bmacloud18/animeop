@@ -16,7 +16,15 @@ load_dotenv()
 import psycopg
 from psycopg.rows import dict_row
 DB_URL = os.environ.get('DB_URL')
-connection = psycopg.connect(DB_URL, row_factory=dict_row)
+
+connection = psycopg.connect(
+    host=os.environ.get('DB_HOST'),
+    database=os.environ.get('DB_NAME'),
+    user=os.environ.get('DB_USER'),
+    password=os.environ.get('DB_PASS'),
+    port=os.environ.get('DB_PORT'),
+    row_factory=dict_row
+)
 
 from src.samples import samples
 
