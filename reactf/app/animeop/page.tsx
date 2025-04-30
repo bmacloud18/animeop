@@ -187,6 +187,7 @@ export default function Homepage() {
         console.log('video end no loop');
         historyQ.enqueue([URL, title]);
         history.set(title, URL);
+        console.log(history);
         if (historyQ.length > HISTORY_NUM) {
             const out = historyQ.dequeue();
             if (history.has(out[1]))
@@ -264,7 +265,7 @@ export default function Homepage() {
             retrieveVideos();
         }
         console.log('i fire once');
-    }, [URL, retrieveVideos]);
+    }, [retrieveVideos]);
 
     let content;
     if (URL != '') {
