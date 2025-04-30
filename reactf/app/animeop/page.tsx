@@ -102,7 +102,7 @@ export default function Homepage() {
 
     function nextVid() {
         historyQ.enqueue([URL, title]);
-        history.set(title, URL);
+        history.set(URL, title);
         if (historyQ.length > HISTORY_NUM) {
             const out = historyQ.dequeue();
             if (history.has(out[1]))
@@ -110,9 +110,9 @@ export default function Homepage() {
         }
         if (q.length > 0) {
             let next = q.dequeue();
-            const nurl = next[0];
+            const nv = next[1];
             //prevent repeats within HISTORY_NUM videos
-            if (history.has(nurl)) {
+            if (history.has(nv)) {
                 console.log('skipped dupe');
                 nextVid();
             }
