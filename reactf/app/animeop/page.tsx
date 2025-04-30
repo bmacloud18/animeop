@@ -98,7 +98,7 @@ export default function Homepage() {
             load(first);
             console.error(err);
         });
-    }, [query])
+    }, [query, history])
 
     function nextVid() {
         historyQ.enqueue([URL, title]);
