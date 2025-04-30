@@ -48,6 +48,8 @@ export default function Homepage() {
         setLoaded(0);
         setPip(false);
         setPlaying(true);
+
+        console.log('now playing: ' + vid[1]);
     }
 
     const retrieveVideos = useCallback(() => {
@@ -101,7 +103,6 @@ export default function Homepage() {
     function nextVid() {
         historyQ.enqueue([URL, title]);
         history.set(title, URL);
-        console.log(history);
         if (historyQ.length > HISTORY_NUM) {
             const out = historyQ.dequeue();
             if (history.has(out[1]))
