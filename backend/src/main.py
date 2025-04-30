@@ -186,7 +186,7 @@ def get_videos(query: str, history: str):
             video_url = yt_string + id_value
             with connection.cursor() as db:
                 try:
-                    db.execute('INSERT INTO videos (vid_url, vid_title) VALUES (%s, %s)', [video_url, yt_query])
+                    db.execute('INSERT INTO videos (vid_url, vid_title) VALUES (%s, %s) ON CONFLICT (vid_url) DO NOTHING', [video_url, yt_query])
                     connection.commit()
                     logger.debug('video added')
                 except Exception as e:
