@@ -47,15 +47,19 @@ model = "gpt-3.5-turbo"
 
 app = FastAPI()
 
+LEVEL = logging.DEBUG
+
 logger = logging.getLogger("animeop")
 logger.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-handler.setLevel(logging.DEBUG)
+handler.setLevel(LEVEL)
 
 logger.addHandler(handler)
 logger.propagate = False
+
+NUM_RES = 10
 
 def completions(prompt, history):
     if prompt == '':
@@ -63,10 +67,10 @@ def completions(prompt, history):
     return client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": "You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - ${history}"},
+            {"role": "system", "content": f"You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - {history}"},
             {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
             {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
-            {"role": "user", "content": "list 10 more random anime openings or endings that I would enjoy."},
+            {"role": "user", "content": f"list {NUM_RES} more random anime openings or endings that I would enjoy."},
         ],
         temperature=.8,
         max_tokens = 100
@@ -81,8 +85,24 @@ def get_home():
     """
         testurl
     """
-    logger.debug('testing')
-    return ["testing"]
+    # logger.debug(connection)
+    try:
+        with connection.cursor() as db:
+                db.execute("SET search_path TO public")
+                try:
+                    db.execute('SELECT * FROM videos')
+                    ret_obj = db.fetchall()
+                    pr = []
+                    if (ret_obj):
+                        for i in ret_obj:
+                            ret_url = i['vid_title']
+                            pr.append(ret_url)
+                    logger.debug(f'returning {len(pr)} items')
+                except Exception as e:
+                    logger.error('error: %s', e)
+    except Exception as e:
+        logger.error(f'error connecting to db: {e}')
+    return pr
 
 @app.get("/db")
 def db_test():
@@ -90,37 +110,39 @@ def db_test():
         reset db
     """
     with connection.cursor() as db:
-        db.execute("SET search_path TO public")
         try:
+            db.execute("SET search_path TO public")
+            db.execute("DROP TABLE videos")
+            connection.commit()
+
             db.execute("""
                 CREATE TABLE IF NOT EXISTS videos (
-                    id SERIAL PRIMARY KEY,
-                    vid_title TEXT NOT NULL,
-                    vid_url TEXT NOT NULL
+                    vid_url TEXT PRIMARY KEY NOT NULL,
+                    vid_title TEXT NOT NULL
                 );
             """)
             db.execute("""
                 DELETE FROM videos;
             """)
             db.execute("""
-                INSERT INTO videos (vid_title, vid_url) VALUES 
-                    ('Fairy Tail Opening 1', 'https://www.youtube.com/watch?v=9jvVBVcZ0-Y'), 
-                    ('Dragon Ball Z Opening', 'https://www.youtube.com/watch?v=R4vjJrGeh1c'),
-                    ('One Piece Opening 20', 'https://www.youtube.com/watch?v=Oo52vQyAR6w'),
-                    ('Demon Slayer Opening 1', 'https://www.youtube.com/watch?v=YkJvHe3KK2c'),
-                    ('Sword Art Online Opening 1', 'https://www.youtube.com/watch?v=1oOBjyOKu2o'),
-                    ('Tokyo Ghoul Opening 1', 'https://www.youtube.com/watch?v=7aMOurgDB-o'),
-                    ('Death Note Opening 1', 'https://www.youtube.com/watch?v=kNyR46eHDxE'),
-                    ('My Hero Academia Opening 1', 'https://www.youtube.com/watch?v=yu0HjPzFYnY'),
-                    ('Fullmetal Alchemist: Brotherhood Opening 1', 'https://www.youtube.com/watch?v=elyXcwunIYA'),
-                    ('Attack on Titan Opening 1', 'https://www.youtube.com/watch?v=8OkpRK2_gVs');
+                INSERT INTO videos (vid_url, vid_title) VALUES 
+                    ('https://www.youtube.com/watch?v=8OkpRK2_gVs', 'Attack on Titan Opening 1'),
+                    ('https://www.youtube.com/watch?v=elyXcwunIYA', 'Fullmetal Alchemist: Brotherhood Opening 1'),
+                    ('https://www.youtube.com/watch?v=yu0HjPzFYnY', 'My Hero Academia Opening 1'),
+                    ('https://www.youtube.com/watch?v=kNyR46eHDxE', 'Death Note Opening 1'),
+                    ('https://www.youtube.com/watch?v=7aMOurgDB-o', 'Tokyo Ghoul Opening 1'),
+                    ('https://www.youtube.com/watch?v=1oOBjyOKu2o', 'Sword Art Online Opening 1'),
+                    ('https://www.youtube.com/watch?v=YkJvHe3KK2c', 'Demon Slayer Opening 1'),
+                    ('https://www.youtube.com/watch?v=Oo52vQyAR6w', 'One Piece Opening 20'),
+                    ('https://www.youtube.com/watch?v=R4vjJrGeh1c', 'Dragon Ball Z Opening'),
+                    ('https://www.youtube.com/watch?v=9jvVBVcZ0-Y', 'Fairy Tail Opening 1');
             """)
             connection.commit()
             db.execute('SELECT * FROM videos')
             return (['db test:', DB_URL] + db.fetchall())
         except Exception as e:
-            logger.debug('error accessing db')
-            return 'error occurred: ' + str(e)
+            logger.error('error accessing db')
+            return 'error occurred: %s', e
 
 @app.get("/videos")
 def get_videos(query: str, history: str):
@@ -128,8 +150,11 @@ def get_videos(query: str, history: str):
         if needed return samples to save tokens and continue testing (line 81)
     """
     raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
+    logger.debug(raw_completions)
     q = deque([[]])
     while len(raw_completions) > 0:
+        n = NUM_RES - len(raw_completions)
+        logger.debug("%s", n)
         yt_query = raw_completions.pop().strip()
         ret_url = ''
         logger.debug('query: ' + yt_query)
@@ -153,13 +178,19 @@ def get_videos(query: str, history: str):
             try:
                 response = request.execute()
             except Exception as e:
-                logger.debug('out of yt tokens')
+                logger.error('out of yt tokens')
+                logger.debug('returning samples')
+                logger.debug(samples)
                 return samples
             id_value = response['items'][0]['id']['videoId']
             video_url = yt_string + id_value
             with connection.cursor() as db:
-                db.execute('INSERT INTO videos (vid_title, vid_url) VALUES (%s, %s)', [yt_query, video_url])
-                connection.commit()
+                try:
+                    db.execute('INSERT INTO videos (vid_url, vid_title) VALUES (%s, %s)', [video_url, yt_query])
+                    connection.commit()
+                    logger.debug('video added')
+                except Exception as e:
+                    logger.error('unable to add video: %s', e)
         else:
             logger.debug('retrieved a cached url')
             video_url = ret_url
