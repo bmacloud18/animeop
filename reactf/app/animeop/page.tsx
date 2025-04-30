@@ -265,7 +265,7 @@ export default function Homepage() {
             retrieveVideos();
         }
         console.log('i fire once');
-    }, [retrieveVideos]);
+    }, []);
 
     let content;
     if (URL != '') {
