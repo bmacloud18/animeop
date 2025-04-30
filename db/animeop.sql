@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS videos (
     vid_title TEXT NOT NULL,
     vid_url TEXT NOT NULL
 );
-DELETE FROM videos;
+
 
 INSERT INTO videos (vid_title, vid_url) VALUES 
     ('Fairy Tail Opening 1', 'https://www.youtube.com/watch?v=9jvVBVcZ0-Y'), 

@@ -27,7 +27,7 @@ connection = psycopg.connect(
     options="-c search_path=public"
 )
 
-from src.samples import samples
+from samples import samples
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
@@ -48,9 +48,14 @@ model = "gpt-3.5-turbo"
 app = FastAPI()
 
 logger = logging.getLogger("animeop")
+logger.setLevel(logging.DEBUG)
+
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+handler.setLevel(logging.DEBUG)
+
 logger.addHandler(handler)
+logger.propagate = False
 
 def completions(prompt, history):
     if prompt == '':
@@ -76,6 +81,7 @@ def get_home():
     """
         testurl
     """
+    logger.debug('testing')
     return ["testing"]
 
 @app.get("/db")
