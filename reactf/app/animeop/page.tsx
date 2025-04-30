@@ -99,6 +99,14 @@ export default function Homepage() {
     }, [query])
 
     function nextVid() {
+        historyQ.enqueue([URL, title]);
+        history.set(title, URL);
+        console.log(history);
+        if (historyQ.length > HISTORY_NUM) {
+            const out = historyQ.dequeue();
+            if (history.has(out[1]))
+                history.delete(out[1]);
+        }
         if (q.length > 0) {
             let next = q.dequeue();
             const nurl = next[0];
@@ -185,15 +193,6 @@ export default function Homepage() {
     //handle adding ended video to history and starting next video
     function handleEnded() {
         console.log('video end no loop');
-        historyQ.enqueue([URL, title]);
-        history.set(title, URL);
-        console.log(history);
-        if (historyQ.length > HISTORY_NUM) {
-            const out = historyQ.dequeue();
-            if (history.has(out[1]))
-                history.delete(out[1]);
-        }
-            
         nextVid();
     }
 
