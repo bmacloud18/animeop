@@ -52,6 +52,7 @@ export default function Homepage() {
 
     const retrieveVideos = useCallback(() => {
         Promise.all([api.getVideos(query, Array.from(history.values()))]).then((res) => {
+            console.log(history, history.values());
             console.log("retrieved urls", res);
             let arrayQ: string[][] = [[]];
             if (res[0][0])
@@ -259,6 +260,7 @@ export default function Homepage() {
     useEffect(() => {
         if (URL === '') {
             setQuery('');
+            setHistory(new Map<string, string>());
             retrieveVideos();
         }
         console.log('i fire once');

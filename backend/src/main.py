@@ -27,7 +27,8 @@ connection = psycopg.connect(
     options="-c search_path=public"
 )
 
-from samples import samples
+# src.samples needs to be samples for local runs
+from src.samples import samples
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
@@ -50,7 +51,7 @@ app = FastAPI()
 LEVEL = logging.DEBUG
 
 logger = logging.getLogger("animeop")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(LEVEL)
 
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
