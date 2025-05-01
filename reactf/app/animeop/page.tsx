@@ -274,7 +274,9 @@ export default function Homepage() {
         if (URL === '') {
             setQuery('');
             setHistory(new Map<string, string>());
-            retrieveVideos();
+            Promise.resolve(api.getToken()).then(() => {
+                retrieveVideos();
+            });
         }
         console.log('using effect');
     }, []);

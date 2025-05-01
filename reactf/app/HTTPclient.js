@@ -30,7 +30,9 @@ export default {
         try {
             const res = await fetch(location + url, {
                 headers: {
-                }
+                    // 'Authorization': `Bearer ${token}`
+                },
+                credentials: "include"
             });
 
             await handleError(res);

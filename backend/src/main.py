@@ -4,13 +4,16 @@ import random
 
 from openai import OpenAI
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.responses import JSONResponse
 
 from collections import deque 
 
 import googleapiclient.discovery
 # import googleapiclient.errors
 # from google.oauth2 import service_account
+from jose import jwt
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -64,6 +67,13 @@ logger.propagate = False
 
 NUM_RES = 10
 
+TOKEN_NAME = os.environ.get('TOKEN_NAME')
+API_SECRET = os.environ.get('API_SECRET')
+ALGORITHM = "HS256"
+
+EXP_TIME = 900 # < 15 minutes left
+
+
 # have chat gpt return a formatted list of popular anime openings and endings, change number of results with NUM_RES
 # avoids repeating values used in history list provided by api query params
 # in the future may add more customization to prompt parameter - time period, genre, etc.
@@ -109,9 +119,65 @@ def get_home():
         logger.error(f'error connecting to db: {e}')
     return pr
 
+@app.post("/")
+def get_token():
+    payload = {
+        "sub": "frontend-client",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "iat": datetime.now(timezone.utc),
+        "scope": "frontend only"
+    }
+    token = jwt.encode(payload, API_SECRET, algorithm=ALGORITHM)
+
+    response = JSONResponse(content={"message": "Token set in cookie"})
+    response.set_cookie(
+        key=TOKEN_NAME,
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="Lax"
+    )
+    return response
+    
+def verify_token(request: Request, response: JSONResponse = None):
+    token = request.cookies.get(TOKEN_NAME)
+    if not token:
+        raise HTTPException(status_code=401, detail="oops! unauthorized")
+
+    try:
+        payload = jwt.decode(token, API_SECRET, algorithms=[ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=403, detail="unauthorized access")
+
+    # renew token if expiring soon
+    exp = datetime.fromtimestamp(payload["exp"])
+    if (exp - datetime.now(timezone.utc)).total_seconds() < EXP_TIME:
+        new_payload = {
+            "sub": payload["sub"],
+            "iat": datetime.now(timezone.utc),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "scope": "frontend only"
+        }
+        new_token = jwt.encode(new_payload, API_SECRET, algorithm=ALGORITHM)
+
+        
+        if response:
+            response.set_cookie(
+            key=TOKEN_NAME,
+            value=new_token,
+            httponly=True,
+            secure=False,
+            samesite="Lax"
+        )
+
+    return payload
+
 # resets database by dropping and recreating videos table with some sample values
-@app.get("/db")
-def db_test():
+@app.put("/db")
+def db_test(request: Request):
+    verify_token(request)
     with connection.cursor() as db:
         try:
             db.execute("SET search_path TO public")
@@ -151,7 +217,9 @@ def db_test():
 # history parameter is a list of titles that chatgpt should omit from its next batch of results to avoid repeating videos in a short time period
 # query parameter will be used in the future for time period, genre, etc.
 @app.get("/videos")
-def get_videos(query: str, history: str):
+def get_videos(request: Request, response: JSONResponse, query: str, history: str):
+    q = deque([[]])
+    verify_token(request, response)
     raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
     logger.debug(raw_completions)
     q = deque([[]])
@@ -172,15 +240,15 @@ def get_videos(query: str, history: str):
             except Exception as e:
                 logger.debug(f"video not found")
         if len(ret_url) < 2:
-            request = youtube.search().list(
+            yt_request = youtube.search().list(
                 type="video",
                 maxResults=1,
                 q=yt_query,
                 part='id'
             )
             try:
-                response = request.execute()
-                id_value = response['items'][0]['id']['videoId']
+                yt_response = yt_request.execute()
+                id_value = yt_response['items'][0]['id']['videoId']
                 video_url = yt_string + id_value
                 with connection.cursor() as db:
                     try:
