@@ -58,7 +58,6 @@ export default function Homepage() {
     // q map uses idx as key to retrieve url and title
     const retrieveVideos = useCallback(() => {
         Promise.all([api.getVideos(query, Array.from(history.values()))]).then((res) => {
-            console.log(history, Array.from(history.values()));
             console.log("retrieved urls", res);
             let arrayQ: string[][] = [[]];
             if (res[0][0])
@@ -135,14 +134,12 @@ export default function Homepage() {
     // remove an item from the queue using the hashed idx
     // this is the main purpose of qMap
     function removeItem(id: string) {
-        console.log('delete clicked', id);
+        // console.log('delete clicked', id);
         let uat = qMap.get(id);
         if (uat) {
-            let durl = uat[0]
             let title = uat[1];
             qMap.delete(title);
             setQ(new Queue<string[]>(...q.toArray().filter(item => (item[2] !== id))));
-            console.log(durl, title, qMap, q);
         }
     }
 
@@ -157,16 +154,13 @@ export default function Homepage() {
     const handleProgress = (state: {
             played: React.SetStateAction<number>;
             loaded: React.SetStateAction<number>; }) =>  {
-
-            // console.log('onProgress', URL, pip, playing, controls, volume, muted, played, loaded, duration, playbackRate, loop, seeking)
             setPlayed(state.played);
             setLoaded(state.loaded);
-
     }
 
     //skips video, swings to nextVid
     function handleSkip() {
-        console.log('video skipped');
+        // console.log('video skipped');
         nextVid();
     }
 
@@ -207,7 +201,7 @@ export default function Homepage() {
 
     // handle the seeked value
     const handleSeekChange = (event: any) => {
-        console.log(event.target.value);
+        // console.log(event.target.value);
         setPlayed(parseFloat(event.target.value));
         player?.seekTo(played);
     }
@@ -221,7 +215,7 @@ export default function Homepage() {
 
     // video ends normally, swings to nextVid
     function handleEnded() {
-        console.log('video end no loop');
+        // console.log('video end no loop');
         nextVid();
     }
 
@@ -231,12 +225,12 @@ export default function Homepage() {
     }
 
     function handlePlay() {
-        console.log('onPlay');
+        // console.log('onPlay');
         setPlaying(true);
     }
 
     function handlePause() {
-        console.log('onpause');
+        // console.log('onpause');
         setPlaying(false);
     }
     
@@ -250,7 +244,7 @@ export default function Homepage() {
     // handle yt licensing error, very rare now with ssl but was necessary early
     function handleError(e: Error) {
         if (e.toString() == '150') {
-            console.log('potential licensing error')
+            console.error('potential licensing error')
             nextVid();
         }
     }
@@ -259,15 +253,13 @@ export default function Homepage() {
     function showQ() {
         let boo = !qShowing
         setQShowing(!qShowing);
-        console.log(boo);
-        
+
         const qDisplay = document.getElementById("q-display");
         if (boo && qDisplay) {
             qDisplay.classList.remove('hidden');
             setTimeout(() => {
                 qDisplay.style.transform = "translateX(-100%)";
             }, 100)
-            console.log(qShowing);
         }
         else if (qDisplay) {
             qDisplay.style.transform = "translateX(0)"
@@ -284,7 +276,7 @@ export default function Homepage() {
             setHistory(new Map<string, string>());
             retrieveVideos();
         }
-        console.log('i fire once');
+        console.log('using effect');
     }, []);
 
     let content;
@@ -313,17 +305,17 @@ export default function Homepage() {
                                 volume={volume}
                                 muted={muted}
                                 onReady={() => console.log('onReady')}
-                                onStart={() => console.log('onStart')}
+                                // onStart={() => console.log('onStart')}
                                 onPlay={handlePlay}
                                 onEnablePIP={handleEnablePIP}
                                 onDisablePIP={handleDisablePIP}
                                 onPause={handlePause}
-                                onBuffer={() => console.log('onBuffer')}
-                                onSeek={e => console.log('onSeek', e)}
+                                // onBuffer={() => console.log('onBuffer')}
+                                // onSeek={e => console.log('onSeek', e)}
                                 onEnded={handleEnded}
                                 onError={e => handleError(e)}
                                 onProgress={handleProgress}
-                                onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
+                                // onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
                             />
                         </div>
                     </div>
