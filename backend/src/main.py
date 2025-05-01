@@ -1,5 +1,7 @@
 import os
 import logging
+import random
+
 from openai import OpenAI
 
 from fastapi import FastAPI
@@ -178,20 +180,22 @@ def get_videos(query: str, history: str):
             )
             try:
                 response = request.execute()
+                id_value = response['items'][0]['id']['videoId']
+                video_url = yt_string + id_value
+                with connection.cursor() as db:
+                    try:
+                        db.execute('INSERT INTO videos (vid_url, vid_title) VALUES (%s, %s) ON CONFLICT (vid_url) DO NOTHING', [video_url, yt_query])
+                        connection.commit()
+                        logger.debug('video added')
+                    except Exception as e:
+                        logger.error('unable to add video: %s', e)
             except Exception as e:
-                logger.error('out of yt tokens')
-                logger.debug('returning samples')
-                logger.debug(samples)
-                return samples
-            id_value = response['items'][0]['id']['videoId']
-            video_url = yt_string + id_value
-            with connection.cursor() as db:
-                try:
-                    db.execute('INSERT INTO videos (vid_url, vid_title) VALUES (%s, %s) ON CONFLICT (vid_url) DO NOTHING', [video_url, yt_query])
-                    connection.commit()
-                    logger.debug('video added')
-                except Exception as e:
-                    logger.error('unable to add video: %s', e)
+                x = random.randint(0, 9)
+                video_url = samples[x][0]
+                logger.error('out of yt tokens: %s', e)
+                # logger.debug('returning samples')
+                # logger.debug(samples)
+                # return samples
         else:
             logger.debug('retrieved a cached url')
             video_url = ret_url
