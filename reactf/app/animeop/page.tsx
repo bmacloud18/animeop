@@ -51,7 +51,11 @@ export default function Homepage() {
 
         console.log('now playing: ' + vid[1]);
     }
-
+    
+    // main function for hitting the videos endpoint and populating the queue with openings/endings
+    // retrieves HISTORY_NUM videos and adds them to the queue, then loads the first in queue to start playing
+    // each array item = [url, title, idx]
+    // q map uses idx as key to retrieve url and title
     const retrieveVideos = useCallback(() => {
         Promise.all([api.getVideos(query, Array.from(history.values()))]).then((res) => {
             console.log(history, Array.from(history.values()));
@@ -98,15 +102,18 @@ export default function Homepage() {
             load(first);
             console.error(err);
         });
-    }, [query, history])
+    }, [query, history]);
 
+    // add previous video to history array and queue
+    // remove least recent vid from history array/q once n > HISTORY_NUM
+    //dequeue from the main queue and load that video if it is not in the history list already
     function nextVid() {
         historyQ.enqueue([URL, title]);
         history.set(URL, title);
         if (historyQ.length > HISTORY_NUM) {
             const out = historyQ.dequeue();
-            if (history.has(out[1]))
-                history.delete(out[1]);
+            if (history.has(out[0]))
+                history.delete(out[0]);
         }
         if (q.length > 0) {
             let next = q.dequeue();
@@ -125,13 +132,26 @@ export default function Homepage() {
         }
     }
 
+    // remove an item from the queue using the hashed idx
+    // this is the main purpose of qMap
+    function removeItem(id: string) {
+        console.log('delete clicked', id);
+        let uat = qMap.get(id);
+        if (uat) {
+            let durl = uat[0]
+            let title = uat[1];
+            qMap.delete(title);
+            setQ(new Queue<string[]>(...q.toArray().filter(item => (item[2] !== id))));
+            console.log(durl, title, qMap, q);
+        }
+    }
+
     //important so the state of the player can be ascertained
     //necessary for seek functionality and progress updates below
     //ref is set to this const in the player when content is defined
     const ref = (player: any) => {
         setPlayer(player);
     }
-
 
 
     const handleProgress = (state: {
@@ -144,23 +164,28 @@ export default function Homepage() {
 
     }
 
+    //skips video, swings to nextVid
     function handleSkip() {
         console.log('video skipped');
         nextVid();
     }
 
+    //set vids to loop or not
     function handleToggleLoop() {
         setLoop(!loop);
     }
 
+    //handle volume slider change
     const handleVolumeChange = (event: any) => {
         setVolume(parseFloat(event.target.value));
     }
 
+    //handle mute toggle
     function handleToggleMute() {
         setMuted(!muted);
     }
 
+    //handle pip toggle
     function handleTogglePIP() {
         setPip(!pip);
     }
@@ -175,28 +200,32 @@ export default function Homepage() {
         setPip(false);
     }
 
+    // make sure we know we are seeking
     const handleSeekMouseDown = (event: any) => {
         setSeeking(true);
     }
 
+    // handle the seeked value
     const handleSeekChange = (event: any) => {
         console.log(event.target.value);
         setPlayed(parseFloat(event.target.value));
         player?.seekTo(played);
     }
 
+    // stop seeking
     const handleSeekMouseUp = (event: any) => {
         setSeeking(false);
         if (player)
             player?.seekTo(parseFloat(event.target.value));
     }
 
-    //handle adding ended video to history and starting next video
+    // video ends normally, swings to nextVid
     function handleEnded() {
         console.log('video end no loop');
         nextVid();
     }
 
+    // toggle playing/pause
     function handlePlayPause() {
         setPlaying(!playing);
     }
@@ -211,12 +240,14 @@ export default function Homepage() {
         setPlaying(false);
     }
     
+    // handle fs
     function handleClickFullscreen() {
         const playerdiv = document.querySelector('.react-player');
         if (playerdiv)
             screenfull.request(playerdiv);
     }
 
+    // handle yt licensing error, very rare now with ssl but was necessary early
     function handleError(e: Error) {
         if (e.toString() == '150') {
             console.log('potential licensing error')
@@ -224,18 +255,7 @@ export default function Homepage() {
         }
     }
 
-    function removeItem(id: string) {
-        console.log('delete clicked', id);
-        let uat = qMap.get(id);
-        if (uat) {
-            let durl = uat[0]
-            let title = uat[1];
-            qMap.delete(title);
-            setQ(new Queue<string[]>(...q.toArray().filter(item => (item[2] !== id))));
-            console.log(durl, title, qMap, q);
-        }
-    }
-
+    // display function to display queue
     function showQ() {
         let boo = !qShowing
         setQShowing(!qShowing);
@@ -255,9 +275,9 @@ export default function Homepage() {
                 qDisplay.classList.add('hidden'); // Hide element after translation
             }, 500);
         }
-        
     }
 
+    // use effect sets the intial values
     useEffect(() => {
         if (URL === '') {
             setQuery('');

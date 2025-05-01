@@ -62,6 +62,9 @@ logger.propagate = False
 
 NUM_RES = 10
 
+# have chat gpt return a formatted list of popular anime openings and endings, change number of results with NUM_RES
+# avoids repeating values used in history list provided by api query params
+# in the future may add more customization to prompt parameter - time period, genre, etc.
 def completions(prompt, history):
     if prompt == '':
         prompt = "list 10 random great anime openings or endings"
@@ -77,15 +80,14 @@ def completions(prompt, history):
         max_tokens = 100
     )
 
+# debug
 @app.on_event("startup")
 async def startup_event():
     logger.debug("startup complete")
 
+# test url, retrieves all cached videos
 @app.get("/")
 def get_home():
-    """
-        testurl
-    """
     # logger.debug(connection)
     try:
         with connection.cursor() as db:
@@ -105,11 +107,9 @@ def get_home():
         logger.error(f'error connecting to db: {e}')
     return pr
 
+# resets database by dropping and recreating videos table with some sample values
 @app.get("/db")
 def db_test():
-    """
-        reset db
-    """
     with connection.cursor() as db:
         try:
             db.execute("SET search_path TO public")
@@ -145,11 +145,11 @@ def db_test():
             logger.error('error accessing db')
             return 'error occurred: %s', e
 
+# main endpoint, retrieves a list of videos of NUM_RES length using chatgpt and youtube api with some url caching
+# history parameter is a list of titles that chatgpt should omit from its next batch of results to avoid repeating videos in a short time period
+# query parameter will be used in the future for time period, genre, etc.
 @app.get("/videos")
 def get_videos(query: str, history: str):
-    """
-        if needed return samples to save tokens and continue testing (line 81)
-    """
     raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
     logger.debug(raw_completions)
     q = deque([[]])
@@ -197,6 +197,3 @@ def get_videos(query: str, history: str):
             video_url = ret_url
         q.append([video_url, yt_query])
     return [*q]
-#     
-    
-    
