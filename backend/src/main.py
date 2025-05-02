@@ -4,7 +4,7 @@ import random
 
 from openai import OpenAI
 
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
 from collections import deque 
@@ -33,7 +33,7 @@ connection = psycopg.connect(
 )
 
 # src.samples needs to be samples for local runs
-from src.samples import samples
+from samples import samples
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
@@ -153,6 +153,7 @@ def verify_token(request: Request, response: JSONResponse = None):
 
     # renew token if expiring soon
     exp = datetime.fromtimestamp(payload["exp"])
+    exp = exp.replace(tzinfo=timezone.utc)
     if (exp - datetime.now(timezone.utc)).total_seconds() < EXP_TIME:
         new_payload = {
             "sub": payload["sub"],
@@ -172,6 +173,7 @@ def verify_token(request: Request, response: JSONResponse = None):
             samesite="Lax"
         )
 
+    logger.debug(payload)
     return payload
 
 # resets database by dropping and recreating videos table with some sample values
