@@ -6,6 +6,9 @@ from openai import OpenAI
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+
 
 from collections import deque 
 
@@ -51,7 +54,19 @@ yt_string = "https://www.youtube.com/watch?v="
 
 model = "gpt-3.5-turbo"
 
+# setup FastAPI backend application, allowing CORS requests from domain
 app = FastAPI()
+origins = [
+    "https://theabbottsonline.com",
+    "https://theabbottsonline.com:3000"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # or ["*"] to allow all (use with care)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 LEVEL = logging.DEBUG
 
