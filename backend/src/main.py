@@ -58,7 +58,9 @@ model = "gpt-3.5-turbo"
 app = FastAPI()
 origins = [
     "https://theabbottsonline.com",
-    "https://theabbottsonline.com:3000"
+    "https://theabbottsonline.com:3000",
+    "https://www.theabbottsonline.com",
+    "https://www.theabbottsonline.com:3000"
 ]
 app.add_middleware(
     CORSMiddleware,
