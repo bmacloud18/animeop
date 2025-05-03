@@ -190,7 +190,7 @@ def verify_token(request: Request, response: JSONResponse = None):
             samesite="Lax"
         )
 
-    logger.debug(payload)
+    # logger.debug(payload)
     return payload
 
 # resets database by dropping and recreating videos table with some sample values
