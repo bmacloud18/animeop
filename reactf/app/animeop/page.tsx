@@ -11,6 +11,8 @@ import api from "@/app/APIclient";
 import ControlButton from "@/app/components/controlButton";
 import samples from "@/app/samples/urls";
 
+import Image from 'next/image';
+
 
 export default function Homepage() {
     const [query, setQuery] = useState<string>('');
@@ -281,128 +283,128 @@ export default function Homepage() {
         console.log('using effect');
     }, []);
 
-    let content;
-    if (URL != '') {
-        content = (
-            <div className="flex flex-col justify-around w-fit h-full self-center">
-            
-                <div className="flex flex-col w-3/4 md:w-4/7 lg:w-3/5 aspect-video place-content-center self-center">
-                    <div className="p-2 underline text-4xl place-self-center">
-                        Anime OP/ED Channel
-                    </div>
-                    <div className="border-yellow border-8 rounded-lg player-wrapper">
-                        <div className="flex flex-col aspect-video pointer-events-none border-2 w-full bg-black rounded-sm border-black">
-                            <ReactPlayer
-                                ref={ref}
-                                className='flex flex-col react-player aspect-video'
-                                height='100%'
-                                width='100%'
-                                url={URL}
-                                pip={pip}
-                                playing={playing}
-                                controls={controls}
-                                light={false}
-                                loop={loop}
-                                playbackRate={playbackRate}
-                                volume={volume}
-                                muted={muted}
-                                onReady={() => console.log('onReady')}
-                                // onStart={() => console.log('onStart')}
-                                onPlay={handlePlay}
-                                onEnablePIP={handleEnablePIP}
-                                onDisablePIP={handleDisablePIP}
-                                onPause={handlePause}
-                                // onBuffer={() => console.log('onBuffer')}
-                                // onSeek={e => console.log('onSeek', e)}
-                                onEnded={handleEnded}
-                                onError={e => handleError(e)}
-                                onProgress={handleProgress}
-                                // onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
-                            />
-                        </div>
-                    </div>
+    let content = URL != '' ? (
+        <div className="flex flex-col justify-around w-fit h-full self-center">
+            <div className="flex flex-col w-3/4 md:w-4/7 lg:w-3/5 aspect-video place-content-center self-center">
+                <div className="p-2 underline text-4xl place-self-center">
+                    Anime OP/ED Channel
                 </div>
-                <div className="flex flex-col items-center">
-                    <div className="border border-2 border rounded-lg p-2">
-                        {title}
+                <div className="border-yellow border-8 rounded-lg player-wrapper">
+                    <div className="flex flex-col aspect-video pointer-events-none border-2 w-full bg-black rounded-sm border-black">
+                        <ReactPlayer
+                            ref={ref}
+                            className='flex flex-col react-player aspect-video'
+                            height='100%'
+                            width='100%'
+                            url={URL}
+                            pip={pip}
+                            playing={playing}
+                            controls={controls}
+                            light={false}
+                            loop={loop}
+                            playbackRate={playbackRate}
+                            volume={volume}
+                            muted={muted}
+                            // onReady={() => console.log('onReady')}
+                            // onStart={() => console.log('onStart')}
+                            onPlay={handlePlay}
+                            onEnablePIP={handleEnablePIP}
+                            onDisablePIP={handleDisablePIP}
+                            onPause={handlePause}
+                            // onBuffer={() => console.log('onBuffer')}
+                            // onSeek={e => console.log('onSeek', e)}
+                            onEnded={handleEnded}
+                            onError={e => handleError(e)}
+                            onProgress={handleProgress}
+                            // onPlaybackQualityChange={(e: any) => console.log('onPlaybackQualityChange', e)}
+                        />
                     </div>
-                </div>
-                <div className="flex flex-col w-screen items-center gap-2 p-4">
-                    <table className="flex flex-col md:flex-row gap-2  items-center justify-center w-full">
-                        <tbody className="flex flex-col md:flex-row gap-4 border-2 rounded-lg p-4 items-center justify-center h-full w-fit">
-                            <tr className="flex flex-col size-full">
-                                <td className="flex flex-row gap-2 justify-center w-full">
-                                    <ControlButton onClick={handleSkip} text="Skip"></ControlButton>
-                                    <ControlButton onClick={handlePlayPause} text={playing ? 'Pause' : 'Play'}></ControlButton>
-                                    <ControlButton onClick={handleClickFullscreen} text="Full"></ControlButton>
-                                    {ReactPlayer.canEnablePIP(URL) &&
-                                        <button onClick={handleTogglePIP}>{pip ? 'Disable PIP' : 'Enable PIP'}</button>}
-                                </td>
-                            </tr>
-                            <tr className="flex flex-col items-center w-full">
-                                <th>Seek</th>
-                                <td className="flex flex-row gap-2 justify-center w-full">
-                                    <input
-                                        type='range' min={0} max={0.999999} step='any'
-                                        value={played}
-                                        onMouseDown={handleSeekMouseDown}
-                                        onChange={handleSeekChange}
-                                        onMouseUp={handleSeekMouseUp}
-                                    />
-                                </td>
-                            </tr>
-                            <tr className="flex flex-col items-center w-full">
-                                <th>Volume</th>
-                                <td className="flex flex-row gap-2 justify-center w-full">
-                                    <input type='range' min={0} max={1} step='any' value={volume} onChange={handleVolumeChange}/>
-                                </td>
-                            </tr>
-                            {/* <tr>
-                                <th>
-                                    <label htmlFor='controls'>Controls</label>
-                                </th>
-                                <td>
-                                    <input id='controls' type='checkbox' checked={controls} onChange={handleToggleControls}/>
-                                    <em>&nbsp; Requires player reload</em>
-                                </td>
-                            </tr> */}
-                            <tr className="flex flex-row items-center justify-center gap-2 w-full">
-                                <td className="flex flex-col items-center w-fit">
-                                    <label htmlFor='muted'>Muted</label>
-                                    <input id='muted' type='checkbox' checked={muted} onChange={handleToggleMute}/>
-                                </td>
-                                <td className="flex flex-col items-center w-fit">
-                                    <label htmlFor='loop'>Loop</label>
-                                    <input id='loop' type='checkbox' checked={loop} onChange={handleToggleLoop}/>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <ControlButton text="Q" onClick={showQ}></ControlButton>
-                                </td>
-                            </tr>
-                            {/* <tr>
-                                <th>Played</th>
-                                <td><progress max={1} value={played}/></td>
-                            </tr>
-                            <tr>
-                                <th>Loaded</th>
-                                <td><progress max={1} value={loaded}/></td>
-                            </tr> */}
-                        </tbody>
-                    </table>
-                    <footer className='footer flex flex-row gap-2 size-fit'>
-                        Version 
-                        <strong>{packageInfo.version}</strong>
-                        {SEPARATOR}
-                        <a href='https://github.com/bmacloud18/animeop'>GitHub</a>
-                        {SEPARATOR}
-                        <a href='https://www.npmjs.com/package/react-player'>npm</a>
-                    </footer>
                 </div>
             </div>
-        )
-    }
+            <div className="flex flex-col items-center">
+                <div className="border border-2 border rounded-lg p-2">
+                    {title}
+                </div>
+            </div>
+            <div className="flex flex-col w-screen items-center gap-2 p-4">
+                <table className="flex flex-col md:flex-row gap-2  items-center justify-center w-full">
+                    <tbody className="flex flex-col md:flex-row gap-4 border-2 rounded-lg p-4 items-center justify-center h-full w-fit">
+                        <tr className="flex flex-col size-full">
+                            <td className="flex flex-row gap-2 justify-center w-full">
+                                <ControlButton onClick={handleSkip} text="Skip"></ControlButton>
+                                <ControlButton onClick={handlePlayPause} text={playing ? 'Pause' : 'Play'}></ControlButton>
+                                <ControlButton onClick={handleClickFullscreen} text="Full"></ControlButton>
+                                {ReactPlayer.canEnablePIP(URL) &&
+                                    <button onClick={handleTogglePIP}>{pip ? 'Disable PIP' : 'Enable PIP'}</button>}
+                            </td>
+                        </tr>
+                        <tr className="flex flex-col items-center w-full">
+                            <th>Seek</th>
+                            <td className="flex flex-row gap-2 justify-center w-full">
+                                <input
+                                    type='range' min={0} max={0.999999} step='any'
+                                    value={played}
+                                    onMouseDown={handleSeekMouseDown}
+                                    onChange={handleSeekChange}
+                                    onMouseUp={handleSeekMouseUp}
+                                />
+                            </td>
+                        </tr>
+                        <tr className="flex flex-col items-center w-full">
+                            <th>Volume</th>
+                            <td className="flex flex-row gap-2 justify-center w-full">
+                                <input type='range' min={0} max={1} step='any' value={volume} onChange={handleVolumeChange}/>
+                            </td>
+                        </tr>
+                        {/* <tr>
+                            <th>
+                                <label htmlFor='controls'>Controls</label>
+                            </th>
+                            <td>
+                                <input id='controls' type='checkbox' checked={controls} onChange={handleToggleControls}/>
+                                <em>&nbsp; Requires player reload</em>
+                            </td>
+                        </tr> */}
+                        <tr className="flex flex-row items-center justify-center gap-2 w-full">
+                            <td className="flex flex-col items-center w-fit">
+                                <label htmlFor='muted'>Muted</label>
+                                <input id='muted' type='checkbox' checked={muted} onChange={handleToggleMute}/>
+                            </td>
+                            <td className="flex flex-col items-center w-fit">
+                                <label htmlFor='loop'>Loop</label>
+                                <input id='loop' type='checkbox' checked={loop} onChange={handleToggleLoop}/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <ControlButton text="Q" onClick={showQ}></ControlButton>
+                            </td>
+                        </tr>
+                        {/* <tr>
+                            <th>Played</th>
+                            <td><progress max={1} value={played}/></td>
+                        </tr>
+                        <tr>
+                            <th>Loaded</th>
+                            <td><progress max={1} value={loaded}/></td>
+                        </tr> */}
+                    </tbody>
+                </table>
+                <footer className='footer flex flex-row gap-2 size-fit'>
+                    Version 
+                    <strong>{packageInfo.version}</strong>
+                    {SEPARATOR}
+                    <a href='https://github.com/bmacloud18/animeop'>GitHub</a>
+                    {SEPARATOR}
+                    <a href='https://www.npmjs.com/package/react-player'>npm</a>
+                </footer>
+            </div>
+        </div>
+    ) : (
+        <div>
+            <Image className="w-24 h-24" src='/favicon.ico' alt="loading" height="32" width="32"/>
+        </div>
+    )
 
     let qDisplayBox = (
         <div id="q-display" className="flex flex-col hidden bg-grey justify-between items-center w-[96rem] h-screen border transition-transform duration-500 ease-out">
