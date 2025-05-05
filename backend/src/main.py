@@ -4,7 +4,7 @@ import random
 
 from openai import OpenAI
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -36,7 +36,7 @@ connection = psycopg.connect(
 )
 
 # src.samples needs to be samples for local runs
-from samples import samples
+from src.samples import samples
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
@@ -91,52 +91,12 @@ ALGORITHM = "HS256"
 EXP_TIME = 900 # < 15 minutes left
 
 
-# have chat gpt return a formatted list of popular anime openings and endings, change number of results with NUM_RES
-# avoids repeating values used in history list provided by api query params
-# in the future may add more customization to prompt parameter - time period, genre, etc.
-def completions(prompt, history):
-    if prompt == '':
-        prompt = "list 10 random great anime openings or endings"
-    return client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": f"You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - {history}"},
-            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
-            {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
-            {"role": "user", "content": f"list {NUM_RES} more random anime openings or endings that I would enjoy."},
-        ],
-        temperature=.8,
-        max_tokens = 100
-    )
+# # debug
+# @app.on_event("startup")
+# async def startup_event():
+#     logger.debug("startup complete")
 
-# debug
-@app.on_event("startup")
-async def startup_event():
-    logger.debug("startup complete")
-
-# test url, retrieves all cached videos
-@app.get("/")
-def get_home():
-    # logger.debug(connection)
-    try:
-        with connection.cursor() as db:
-                db.execute("SET search_path TO public")
-                try:
-                    db.execute('SELECT * FROM videos')
-                    ret_obj = db.fetchall()
-                    pr = []
-                    if (ret_obj):
-                        for i in ret_obj:
-                            ret_url = i['vid_title']
-                            pr.append(ret_url)
-                    logger.debug(f'returning {len(pr)} items')
-                except Exception as e:
-                    logger.error('error: %s', e)
-    except Exception as e:
-        logger.error(f'error connecting to db: {e}')
-    return pr
-
-@app.post("/")
+@app.post("/inconspicuousroute")
 def get_token():
     payload = {
         "sub": "frontend-client",
@@ -191,12 +151,53 @@ def verify_token(request: Request, response: JSONResponse = None):
         )
 
     # logger.debug(payload)
-    return payload
+    return True
+
+# have chat gpt return a formatted list of popular anime openings and endings, change number of results with NUM_RES
+# avoids repeating values used in history list provided by api query params
+# in the future may add more customization to prompt parameter - time period, genre, etc.
+def completions(prompt, history):
+    if prompt == '':
+        prompt = "list 10 random great anime openings or endings"
+    return client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": f"You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - {history}"},
+            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
+            {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
+            {"role": "user", "content": f"list {NUM_RES} more random anime openings or endings that I would enjoy."},
+        ],
+        temperature=.8,
+        max_tokens = 100
+    )
+
+# test url, retrieves all cached videos
+@app.get("/")
+def get_home(valid: bool = Depends(verify_token)):
+    logger.debug(valid)
+    try:
+        with connection.cursor() as db:
+                db.execute("SET search_path TO public")
+                try:
+                    db.execute('SELECT * FROM videos')
+                    ret_obj = db.fetchall()
+                    pr = []
+                    if (ret_obj):
+                        for i in ret_obj:
+                            ret_url = i['vid_title']
+                            pr.append(ret_url)
+                    logger.debug(f'returning {len(pr)} items')
+                except Exception as e:
+                    logger.error('error: %s', e)
+    except Exception as e:
+        logger.error(f'error connecting to db: {e}')
+    return pr
+
+
 
 # resets database by dropping and recreating videos table with some sample values
 @app.put("/db")
-def db_test(request: Request):
-    verify_token(request)
+def db_test(valid: bool = Depends(verify_token)):
     with connection.cursor() as db:
         try:
             db.execute("SET search_path TO public")
@@ -236,9 +237,9 @@ def db_test(request: Request):
 # history parameter is a list of titles that chatgpt should omit from its next batch of results to avoid repeating videos in a short time period
 # query parameter will be used in the future for time period, genre, etc.
 @app.get("/videos")
-def get_videos(request: Request, response: JSONResponse, query: str, history: str):
+def get_videos(query: str, history: str, valid: bool = Depends(verify_token)):
+    logger.debug(valid)
     q = deque([[]])
-    verify_token(request, response)
     raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
     logger.debug(raw_completions)
     q = deque([[]])

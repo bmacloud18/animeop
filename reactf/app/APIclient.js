@@ -8,6 +8,6 @@ export default {
     },
 
     getToken: async() => {
-        return HTTPclient.post('', {}, API_BASE)
+        return HTTPclient.post('inconspicuousroute', {}, API_BASE)
     }
 }
