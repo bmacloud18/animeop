@@ -167,8 +167,8 @@ def completions(prompt, history):
         model=model,
         messages=[
             {"role": "system", "content": f"You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - {history}"},
-            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy. provide 3 lists separated by this character - the first list being the opening title, the second being the artist/singer of the song, and the third being the year that the opening was first used in the anime release. Always include the number at the end of the anime opening title (starting with 1 for the first chronological opening or ending and so on). "},
-            {"role": "assistant", "content": "Anime Opening x, Naruto Shippuden Ending y, Bleach Opening z - Artist x, Artist y, Artist z"},
+            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
+            {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
             {"role": "user", "content": f"list {NUM_RES} more random anime openings or endings that I would enjoy."},
         ],
         temperature=.8,
