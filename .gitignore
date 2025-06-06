@@ -133,3 +133,5 @@ dist
 /nginx/ssl
 
 __pycache__
+
+*\.vs

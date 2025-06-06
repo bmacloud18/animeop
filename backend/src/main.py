@@ -22,18 +22,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import psycopg
-from psycopg.rows import dict_row
+from psycopg import Connection
+from psycopg_pool import ConnectionPool
+# from psycopg.rows import dict_row
 DB_URL = os.environ.get('DB_URL')
 
-connection = psycopg.connect(
-    host=os.environ.get('DB_HOST'),
-    dbname=os.environ.get('DB_NAME'),
-    user=os.environ.get('DB_USER'),
-    password=os.environ.get('DB_PASS'),
-    port=os.environ.get('DB_PORT'),
-    row_factory=dict_row,
-    options="-c search_path=public"
-)
+pool: ConnectionPool = None
+
+# connection = psycopg.connect(
+#     host=os.environ.get('DB_HOST'),
+#     dbname=os.environ.get('DB_NAME'),
+#     user=os.environ.get('DB_USER'),
+#     password=os.environ.get('DB_PASS'),
+#     port=os.environ.get('DB_PORT'),
+#     row_factory=dict_row,
+#     options="-c search_path=public"
+# ) - apparently bad practice, although it looks similar to the node.js library, it is actually not creating a connection pool like I have now explicitly done
 
 # src.samples needs to be samples for local runs
 from src.samples import samples
@@ -163,17 +167,31 @@ def completions(prompt, history):
         model=model,
         messages=[
             {"role": "system", "content": f"You are a helpful assistant. you can only respond with a comma separated list. do not add duplicate items to your list. do not include items already included in this history list - {history}"},
-            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy."},
-            {"role": "assistant", "content": "Naruto Opening 4, Naruto Shippuden Ending 6, Bleach Opening 1"},
+            {"role": "user", "content": "I am a big anime fan. I love the intro and outro videos that are famous to anime culture. List 3 anime openings and/or endings that you think I would enjoy. provide 3 lists separated by this character - the first list being the opening title, the second being the artist/singer of the song, and the third being the year that the opening was first used in the anime release. Always include the number at the end of the anime opening title (starting with 1 for the first chronological opening or ending and so on). "},
+            {"role": "assistant", "content": "Anime Opening x, Naruto Shippuden Ending y, Bleach Opening z - Artist x, Artist y, Artist z"},
             {"role": "user", "content": f"list {NUM_RES} more random anime openings or endings that I would enjoy."},
         ],
         temperature=.8,
         max_tokens = 100
     )
 
+
+def get_db():
+    with pool.connection() as con:
+        yield con
+
+@app.on_event("startup")
+def startup():
+    global pool
+    pool = ConnectionPool(DB_URL, min_size=1, max_size=10)
+
+@app.on_event("shutdown")
+def shutdown():
+    pool.close()
+
 # test url, retrieves all cached videos
 @app.get("/")
-def get_home(valid: bool = Depends(verify_token)):
+def get_home(valid: bool = Depends(verify_token), connection: Connection = Depends(get_db)):
     logger.debug(valid)
     try:
         with connection.cursor() as db:
@@ -197,7 +215,7 @@ def get_home(valid: bool = Depends(verify_token)):
 
 # resets database by dropping and recreating videos table with some sample values
 @app.put("/db")
-def db_test(valid: bool = Depends(verify_token)):
+def db_test(valid: bool = Depends(verify_token), connection: Connection = Depends(get_db)):
     with connection.cursor() as db:
         try:
             db.execute("SET search_path TO public")
@@ -237,7 +255,7 @@ def db_test(valid: bool = Depends(verify_token)):
 # history parameter is a list of titles that chatgpt should omit from its next batch of results to avoid repeating videos in a short time period
 # query parameter will be used in the future for time period, genre, etc.
 @app.get("/videos")
-def get_videos(query: str, history: str, valid: bool = Depends(verify_token)):
+def get_videos(query: str, history: str, valid: bool = Depends(verify_token), connection: Connection = Depends(get_db)):
     logger.debug(valid)
     q = deque([[]])
     raw_completions = deque(completions(query, history).choices[0].message.content.split(','))
