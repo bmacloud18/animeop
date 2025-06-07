@@ -128,7 +128,7 @@ def verify_token(request: Request, response: JSONResponse = None):
     try:
         payload = jwt.decode(token, API_SECRET, algorithms=[ALGORITHM])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="expired")
+        get_token()
     except jwt.JWTError:
         raise HTTPException(status_code=403, detail="unauthorized access")
 
