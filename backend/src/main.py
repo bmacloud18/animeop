@@ -281,7 +281,7 @@ def get_videos(query: str, history: str, valid: bool = Depends(verify_token), co
             yt_request = youtube.search().list(
                 type="video",
                 maxResults=1,
-                q=yt_query + 'official video',
+                q=yt_query,
                 part='id'
             )
             try:
