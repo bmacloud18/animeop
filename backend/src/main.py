@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
-from util import get_token, verify_token
+
 
 import psycopg
 from psycopg import Connection
@@ -41,6 +41,7 @@ pool: ConnectionPool = None
 
 # src.samples needs to be samples for local runs
 from src.samples import samples
+from src.util import get_token, verify_token
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
