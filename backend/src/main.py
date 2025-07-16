@@ -8,8 +8,6 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-
-
 from collections import deque 
 
 import googleapiclient.discovery
@@ -20,6 +18,8 @@ from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 load_dotenv()
+
+from util import get_token, verify_token
 
 import psycopg
 from psycopg import Connection
@@ -101,61 +101,8 @@ EXP_TIME = 900 # < 15 minutes left
 #     logger.debug("startup complete")
 
 @app.post("/inconspicuousroute")
-def get_token():
-    payload = {
-        "sub": "frontend-client",
-        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        "iat": datetime.now(timezone.utc),
-        "scope": "frontend only"
-    }
-    token = jwt.encode(payload, API_SECRET, algorithm=ALGORITHM)
-
-    response = JSONResponse(content={"message": "Token set in cookie"})
-    response.set_cookie(
-        key=TOKEN_NAME,
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="Lax"
-    )
-    return response
-    
-def verify_token(request: Request, response: JSONResponse = None):
-    token = request.cookies.get(TOKEN_NAME)
-    if not token:
-        raise HTTPException(status_code=401, detail="oops! unauthorized")
-
-    try:
-        payload = jwt.decode(token, API_SECRET, algorithms=[ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        get_token()
-    except jwt.JWTError:
-        raise HTTPException(status_code=403, detail="unauthorized access")
-
-    # renew token if expiring soon
-    exp = datetime.fromtimestamp(payload["exp"])
-    exp = exp.replace(tzinfo=timezone.utc)
-    if (exp - datetime.now(timezone.utc)).total_seconds() < EXP_TIME:
-        new_payload = {
-            "sub": payload["sub"],
-            "iat": datetime.now(timezone.utc),
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "scope": "frontend only"
-        }
-        new_token = jwt.encode(new_payload, API_SECRET, algorithm=ALGORITHM)
-
-        
-        if response:
-            response.set_cookie(
-            key=TOKEN_NAME,
-            value=new_token,
-            httponly=True,
-            secure=False,
-            samesite="Lax"
-        )
-
-    # logger.debug(payload)
-    return True
+def get_token_route():
+    get_token()
 
 # have chat gpt return a formatted list of popular anime openings and endings, change number of results with NUM_RES
 # avoids repeating values used in history list provided by api query params
