@@ -45,32 +45,31 @@ def verify_token(request: Request, response: JSONResponse = None):
 
     try:
         payload = jwt.decode(token, API_SECRET, algorithms=[ALGORITHM])
+
+        # renew token if expiring soon
+        exp = datetime.fromtimestamp(payload["exp"])
+        exp = exp.replace(tzinfo=timezone.utc)
+        if (exp - datetime.now(timezone.utc)).total_seconds() < EXP_TIME:
+            new_payload = {
+                "sub": payload["sub"],
+                "iat": datetime.now(timezone.utc),
+                "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+                "scope": "frontend only"
+            }
+            new_token = jwt.encode(new_payload, API_SECRET, algorithm=ALGORITHM)
+
+            
+            if response:
+                response.set_cookie(
+                key=TOKEN_NAME,
+                value=new_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax"
+            )
     except jwt.ExpiredSignatureError:
         get_token()
     except jwt.JWTError:
         raise HTTPException(status_code=403, detail="unauthorized access")
 
-    # renew token if expiring soon
-    exp = datetime.fromtimestamp(payload["exp"])
-    exp = exp.replace(tzinfo=timezone.utc)
-    if (exp - datetime.now(timezone.utc)).total_seconds() < EXP_TIME:
-        new_payload = {
-            "sub": payload["sub"],
-            "iat": datetime.now(timezone.utc),
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "scope": "frontend only"
-        }
-        new_token = jwt.encode(new_payload, API_SECRET, algorithm=ALGORITHM)
-
-        
-        if response:
-            response.set_cookie(
-            key=TOKEN_NAME,
-            value=new_token,
-            httponly=True,
-            secure=False,
-            samesite="Lax"
-        )
-
-    # logger.debug(payload)
     return True
