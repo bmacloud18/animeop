@@ -149,7 +149,7 @@ def get_home(valid: bool = Depends(verify_token), connection: Connection = Depen
                     pr = []
                     if (ret_obj):
                         for i in ret_obj:
-                            ret_url = i['vid_title']
+                            ret_url = i[1]
                             pr.append(ret_url)
                     logger.debug(f'returning {len(pr)} items')
                 except Exception as e:
@@ -220,7 +220,7 @@ def get_videos(query: str, history: str, valid: bool = Depends(verify_token), co
                 db.execute('SELECT * FROM videos WHERE vid_title=%s', [yt_query])
                 ret_obj = db.fetchall()
                 if (ret_obj):
-                    ret_url = ret_obj[0]['vid_url']
+                    ret_url = ret_obj[0][0]
                 logger.debug('url: ' + ret_url)
             except Exception as e:
                 logger.debug(f"video not found")
