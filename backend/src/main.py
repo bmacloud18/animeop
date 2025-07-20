@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
-
+# from db import get_db
 
 import psycopg
 from psycopg import Connection
@@ -41,7 +41,7 @@ pool: ConnectionPool = None
 
 # src.samples needs to be samples for local runs
 from src.samples import samples
-from src.util import get_token, verify_token
+# from src.util import get_token, verify_token
 
 OpenAI.api_key = os.environ.get('OPENAI_API_KEY')
 yt_key = os.environ.get('YT_API_KEY')
@@ -100,10 +100,61 @@ EXP_TIME = 900 # < 15 minutes left
 # @app.on_event("startup")
 # async def startup_event():
 #     logger.debug("startup complete")
+def verify_token(request: Request, response: JSONResponse = None):
+    token = request.cookies.get(TOKEN_NAME)
+    if not token:
+        raise HTTPException(status_code=401, detail="oops! unauthorized")
+
+    try:
+        payload = jwt.decode(token, API_SECRET, algorithms=[ALGORITHM])
+
+        # renew token if expiring soon
+        exp = datetime.fromtimestamp(payload["exp"])
+        exp = exp.replace(tzinfo=timezone.utc)
+        if (exp - datetime.now(timezone.utc)).total_seconds() < EXP_TIME:
+            new_payload = {
+                "sub": payload["sub"],
+                "iat": datetime.now(timezone.utc),
+                "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+                "scope": "frontend only"
+            }
+            new_token = jwt.encode(new_payload, API_SECRET, algorithm=ALGORITHM)
+
+            
+            if response:
+                response.set_cookie(
+                key=TOKEN_NAME,
+                value=new_token,
+                httponly=True,
+                secure=False,
+                samesite="Lax"
+            )
+    except jwt.ExpiredSignatureError:
+        get_token()
+    except jwt.JWTError:
+        raise HTTPException(status_code=403, detail="unauthorized access")
+
+    return True
 
 @app.post("/inconspicuousroute")
-def get_token_route():
-    get_token()
+def get_token():
+    payload = {
+        "sub": "frontend-client",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "iat": datetime.now(timezone.utc),
+        "scope": "frontend only"
+    }
+    token = jwt.encode(payload, API_SECRET, algorithm=ALGORITHM)
+
+    response = JSONResponse(content={"message": "Token set in cookie"})
+    response.set_cookie(
+        key=TOKEN_NAME,
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="Lax"
+    )
+    return response
 
 # have chat gpt return a formatted list of popular anime openings and endings, change number of results with NUM_RES
 # avoids repeating values used in history list provided by api query params
