@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
-from db import get_db
+# from db import get_db
 
 import psycopg
 from psycopg import Connection
